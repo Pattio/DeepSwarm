@@ -1,5 +1,7 @@
 # macOS
 .DS_Store
-# python
+
+# Python
 *.pyc
 __pycache__/
+deepswarm-env/
