@@ -116,7 +116,7 @@ class DenseNode(Node):
     def available_transitions():
         return [
             DenseNode,
-            DropoutNode
+            DropoutNode,
         ]
 
 
