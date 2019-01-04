@@ -6,6 +6,7 @@ class Node:
     def __init__(self, name):
         self.name = name
         self.neighbours = []
+        self.is_expanded = False
 
     @classmethod
     def available_instances(cls):
@@ -16,8 +17,12 @@ class Node:
         return []
 
     def expand(self):
-        # Reset neighbours, so we don't add same neighbours twice
-        self.neighbours = []
+        # Expand node only if it has not been expanded before
+        if self.is_expanded:
+            return
+        else:
+            self.is_expanded = True
+
         for node in self.available_transitions():
             self.neighbours += node.available_instances()
 
@@ -35,7 +40,7 @@ class InputNode(Node):
 
 class Conv2DNode(Node):
     def __init__(self, kernel_size):
-        Node.__init__(self, "Conv2DNode")
+        Node.__init__(self, "Conv2DNode-%d" % kernel_size)
         self.kernel_size = kernel_size
 
     @classmethod
@@ -57,7 +62,7 @@ class Conv2DNode(Node):
 
 class MaxPool2DNode(Node):
     def __init__(self, pool_size, strides):
-        Node.__init__(self, "MaxPool2DNode")
+        Node.__init__(self, "MaxPool2DNode-%d-%d" % (pool_size, strides))
         self.pool_size = pool_size
         self.strides = strides
 
@@ -95,7 +100,7 @@ class FlattenNode(Node):
 
 class DenseNode(Node):
     def __init__(self, output_size, activation):
-        Node.__init__(self, "DenseNode")
+        Node.__init__(self, "DenseNode-%d-%s" % (output_size, activation))
         self.output_size = output_size
         self.activation = activation
 
@@ -117,7 +122,7 @@ class DenseNode(Node):
 
 class DropoutNode(Node):
     def __init__(self, rate):
-        Node.__init__(self, "DropoutNode")
+        Node.__init__(self, "DropoutNode-%f" % rate)
         self.rate = rate
 
     @classmethod
@@ -138,6 +143,6 @@ class DropoutNode(Node):
 
 class ClassificationNode(Node):
     def __init__(self, output_size, activation):
-        Node.__init__(self, "ClassificationNode")
+        Node.__init__(self, "ClassificationNode-%d-%s" % (output_size, activation))
         self.output_size = output_size
         self.activation = activation
