@@ -1,6 +1,8 @@
 # Copyright (c) 2019 Edvinas Byla
 # Licensed under MIT License
 
+import copy
+
 
 class Node:
     def __init__(self, name):
@@ -25,6 +27,20 @@ class Node:
 
         for node in self.available_transitions():
             self.neighbours += node.available_instances()
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            # Skip neighbours to make copying more efficient
+            if k == "neighbours":
+                v = []
+            setattr(result, k, copy.deepcopy(v, memo))
+        return result
+
+    def create_deepcopy(self):
+        return copy.deepcopy(self)
 
 
 class InputNode(Node):
@@ -137,7 +153,7 @@ class DropoutNode(Node):
     @staticmethod
     def available_transitions():
         return [
-            DenseNode
+            DenseNode,
         ]
 
 
