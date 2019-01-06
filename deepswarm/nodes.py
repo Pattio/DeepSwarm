@@ -123,9 +123,11 @@ class DenseNode(Node):
     @classmethod
     def available_instances(cls):
         return [
-            cls(128, "ReLu"),
-            cls(256, "ReLu"),
-            cls(512, "ReLu"),
+            # Todo: create file which contains all supported activation
+            # functions and use that instead of hardcoded value
+            cls(128, "relu"),
+            cls(256, "relu"),
+            cls(512, "relu"),
         ]
 
     @staticmethod
