@@ -157,13 +157,6 @@ class DropoutNode(Node):
         ]
 
 
-class ClassificationNode(Node):
-    def __init__(self, output_size, activation):
-        super().__init__("ClassificationNode-%d-%s" % (output_size, activation))
-        self.output_size = output_size
-        self.activation = activation
-
-
 class EndNode(Node):
     def __init__(self):
         super().__init__("EndNode")
