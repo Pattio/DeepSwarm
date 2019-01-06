@@ -162,3 +162,8 @@ class ClassificationNode(Node):
         super().__init__("ClassificationNode-%d-%s" % (output_size, activation))
         self.output_size = output_size
         self.activation = activation
+
+
+class EndNode(Node):
+    def __init__(self):
+        super().__init__("EndNode")
