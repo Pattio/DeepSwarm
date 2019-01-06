@@ -45,7 +45,7 @@ class Node:
 
 class InputNode(Node):
     def __init__(self):
-        Node.__init__(self, "InputNode")
+        super().__init__("InputNode")
 
     @staticmethod
     def available_transitions():
@@ -56,7 +56,7 @@ class InputNode(Node):
 
 class Conv2DNode(Node):
     def __init__(self, kernel_size):
-        Node.__init__(self, "Conv2DNode-%d" % kernel_size)
+        super().__init__("Conv2DNode-%d" % kernel_size)
         self.kernel_size = kernel_size
 
     @classmethod
@@ -78,7 +78,7 @@ class Conv2DNode(Node):
 
 class MaxPool2DNode(Node):
     def __init__(self, pool_size, strides):
-        Node.__init__(self, "MaxPool2DNode-%d-%d" % (pool_size, strides))
+        super().__init__("MaxPool2DNode-%d-%d" % (pool_size, strides))
         self.pool_size = pool_size
         self.strides = strides
 
@@ -99,7 +99,7 @@ class MaxPool2DNode(Node):
 
 class FlattenNode(Node):
     def __init__(self):
-        Node.__init__(self, "FlattenNode")
+        super().__init__("FlattenNode")
 
     @classmethod
     def available_instances(cls):
@@ -116,7 +116,7 @@ class FlattenNode(Node):
 
 class DenseNode(Node):
     def __init__(self, output_size, activation):
-        Node.__init__(self, "DenseNode-%d-%s" % (output_size, activation))
+        super().__init__("DenseNode-%d-%s" % (output_size, activation))
         self.output_size = output_size
         self.activation = activation
 
@@ -138,7 +138,7 @@ class DenseNode(Node):
 
 class DropoutNode(Node):
     def __init__(self, rate):
-        Node.__init__(self, "DropoutNode-%f" % rate)
+        super().__init__("DropoutNode-%f" % rate)
         self.rate = rate
 
     @classmethod
@@ -159,6 +159,6 @@ class DropoutNode(Node):
 
 class ClassificationNode(Node):
     def __init__(self, output_size, activation):
-        Node.__init__(self, "ClassificationNode-%d-%s" % (output_size, activation))
+        super().__init__("ClassificationNode-%d-%s" % (output_size, activation))
         self.output_size = output_size
         self.activation = activation
