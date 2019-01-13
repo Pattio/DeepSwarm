@@ -2,20 +2,25 @@
 # Licensed under MIT License
 
 import random
-from .nodes import (Conv2DNode, DenseNode, DropoutNode, EndNode, FlattenNode,
-                    InputNode, MaxPool2DNode)
+from .nodes import (Conv2DNode, DenseNode, DropoutNode, EndNode, FlattenNode, InputNode, MaxPool2DNode)
 
 
 class Graph:
-    def __init__(self):
-        self.allowed_depth = 1
+    def __init__(self, current_depth=1):
+        self.current_depth = current_depth
         self.input_node = InputNode()
+
+    def increase_depth(self):
+        self.current_depth += 1
 
     def generate_random_path(self):
         path = [self.input_node.create_deepcopy()]
         current_node = self.input_node
-        for _ in range(self.allowed_depth):
+        for _ in range(self.current_depth):
             current_node.expand()
+            # Stop expanding node, when it can't be expanded any more
+            if not current_node.neighbours:
+                break
             # Select new random node and append it to the path
             random_index = random.randint(0, len(current_node.neighbours) - 1)
             current_node = current_node.neighbours[random_index]
