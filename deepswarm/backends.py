@@ -3,8 +3,7 @@
 
 import tensorflow as tf
 from tensorflow.keras import backend as K
-from .nodes import (Conv2DNode, DenseNode, DropoutNode, EndNode, FlattenNode,
-                    InputNode, MaxPool2DNode)
+from .nodes import (Conv2DNode, DenseNode, DropoutNode, EndNode, FlattenNode, InputNode, MaxPool2DNode)
 
 
 class BaseBackend:
@@ -52,7 +51,7 @@ class TFKerasBackend(BaseBackend):
                 if idx > 0 and type(path[idx - 1]) is InputNode:
                     model.add(
                         tf.keras.layers.Conv2D(
-                            filters=8,
+                            filters=2,
                             kernel_size=node.kernel_size,
                             padding='same',
                             data_format=data_format,
@@ -63,7 +62,7 @@ class TFKerasBackend(BaseBackend):
                 else:
                     model.add(
                         tf.keras.layers.Conv2D(
-                            filters=8,
+                            filters=2,
                             kernel_size=node.kernel_size,
                             padding='same',
                             data_format=data_format,
@@ -109,7 +108,7 @@ class TFKerasBackend(BaseBackend):
             loss='sparse_categorical_crossentropy',
             metrics=['accuracy']
         )
-        model.fit(self.x_train, self.y_train, epochs=1, batch_size=1000)
+        model.fit(self.x_train, self.y_train, epochs=3, batch_size=1000)
         loss, accuracy = model.evaluate(self.x_test, self.y_test)
         print(loss, accuracy)
         return loss
