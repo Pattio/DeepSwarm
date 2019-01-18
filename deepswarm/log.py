@@ -4,6 +4,7 @@
 
 import json
 import logging
+import re
 from colorama import init as colorama_init
 from colorama import Fore, Back, Style
 
@@ -18,11 +19,24 @@ class Log:
     def enable(cls):
         # Init colorama to enable colors
         colorama_init()
-        # Create logger
+        # Get deepswarm logger
         cls.logger = logging.getLogger("deepswarm")
-        logger_handler = logging.StreamHandler()
-        logger_handler.setFormatter(logging.Formatter('%(message)s'))
-        cls.logger.addHandler(logger_handler)
+
+        # Create stream handler
+        stream_handler = logging.StreamHandler()
+        stream_formater = logging.Formatter("%(message)s")
+        stream_handler.setFormatter(stream_formater)
+        # Add stream handler to logger
+        cls.logger.addHandler(stream_handler)
+
+        # Create and setup file handler
+        file_handler = logging.FileHandler("deepswarm.log")
+        file_formater = FileFormatter("%(asctime)s\n%(message)s")
+        file_handler.setFormatter(file_formater)
+        # Add file handle to logger
+        cls.logger.addHandler(file_handler)
+
+        # Set logger level to debug
         cls.logger.setLevel(logging.DEBUG)
 
     @classmethod
@@ -34,9 +48,7 @@ class Log:
         else:
             options = cls.HEADER_W
 
-        # formated_message = cls.create_message(message.center(80, '-'), options)
         cls.info(message.center(80, '-'), options)
-        # cls.logger.info(formated_message)
 
     @classmethod
     def debug(cls, message, options=[Fore.CYAN]):
@@ -72,3 +84,16 @@ class Log:
         if isinstance(message, str) is False:
             message = str(message)
         return ''.join(options) + message + '\033[0m'
+
+
+class FileFormatter(logging.Formatter):
+    def plain(self, string):
+        # Regex code adapted from Martijn Pieters https://stackoverflow.com/a/14693789
+        ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]|[-]{2,}')
+        return ansi_escape.sub('', string)
+
+    def format(self, record):
+        message = super(FileFormatter, self).format(record)
+        plain_message = self.plain(message)
+        separator = '=' * 80
+        return ''.join((separator, "\n", plain_message, "\n", separator))

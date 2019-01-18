@@ -5,3 +5,6 @@
 *.pyc
 __pycache__/
 deepswarm-env/
+
+# Log files
+*.log
