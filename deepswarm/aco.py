@@ -117,6 +117,7 @@ class Ant:
     def __init__(self, path=[]):
         self.path = path
         self.cost = math.inf
+        self.accuracy = 0.0
         self.model = None
 
     def __lt__(self, other):
@@ -124,7 +125,7 @@ class Ant:
 
     def evaluate(self, backend):
         self.model = backend.generate_model(self.path)
-        self.cost = backend.evaluate_model(self.model)
+        (self.cost, self.accuracy) = backend.evaluate_model(self.model)
 
 
 class Pheromone():

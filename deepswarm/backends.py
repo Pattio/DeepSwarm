@@ -31,7 +31,7 @@ class BaseBackend:
         Args:
             model: model which represents neural network structure
         Returns:
-            loss value on test dataset
+            loss & accuracy tuple
 
         """
         raise NotImplementedError()
@@ -110,5 +110,4 @@ class TFKerasBackend(BaseBackend):
         )
         model.fit(self.x_train, self.y_train, epochs=3, batch_size=1000)
         loss, accuracy = model.evaluate(self.x_test, self.y_test)
-        print(loss, accuracy)
-        return loss
+        return (loss, accuracy)
