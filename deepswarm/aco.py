@@ -1,9 +1,11 @@
 # Copyright (c) 2019 Edvinas Byla
 # Licensed under MIT License
 
+
 import random
 import math
 from .graph import Graph
+from .log import Log
 
 
 class ACO:
@@ -26,8 +28,10 @@ class ACO:
         Returns:
             ant which found best network topology
         """
+        Log.header("STARTING ACO SEARCH", type="GREEN")
         best_ant = Ant(self.graph.generate_random_path())
         best_ant.evaluate(self.backend)
+        Log.info(best_ant)
 
         for _ in range(self.max_iteration):
             ants = self.generate_ants()
@@ -35,16 +39,21 @@ class ACO:
             # If any of the new solutions has lower cost than best solution, update best
             if ants[0].cost < best_ant.cost:
                 best_ant = ants[0]
+                Log.header("NEW BEST ANT FOUND", type="GREEN")
 
+            Log.header("BEST ANT DURING ITERATION")
+            Log.info(best_ant)
             # Do global pheromone update
             self.pheromone.update(ant=best_ant, local=False)
             # Expand graph
             self.graph.increase_depth()
+            Log.header("INCREASING SEARCH DEPTH TO %i" % self.graph.current_depth, type="RED")
         return best_ant
 
     def generate_ants(self):
         ants = []
-        for _ in range(self.ants_number):
+        for ant_number in range(self.ants_number):
+            Log.header("GENERATING ANT %i" % (ant_number + 1))
             ant = Ant()
             # Generate ant's path based on pheremone
             ant.path = self.generate_path()
@@ -52,6 +61,7 @@ class ACO:
             # and use stats from already evaluated ant
             ant.evaluate(self.backend)
             ants.append(ant)
+            Log.info(ant)
             self.pheromone.update(ant=ant, local=True)
         return ants
 
@@ -123,6 +133,16 @@ class Ant:
     def __lt__(self, other):
         return self.cost < other.cost
 
+    def __str__(self):
+        path_string = ' -> '.join([node.name for node in self.path])
+
+        return "======= \n Ant: %s \n Loss: %f \n Accuracy: %f \n Path: %s \n=======" % (
+            hex(id(self)),
+            self.cost,
+            self.accuracy,
+            path_string
+        )
+
     def evaluate(self, backend):
         self.model = backend.generate_model(self.path)
         (self.cost, self.accuracy) = backend.evaluate_model(self.model)
@@ -183,6 +203,9 @@ class Pheromone():
         return identifiers[-1] in self.pheromone_matrix
 
     def update(self, ant, local):
+        update_type = "LOCAL" if local else "GLOBAL"
+        Log.header("PHEROMONE MATRIX BEFORE %s UPDATE" % update_type)
+        Log.info(self.pheromone_matrix)
         # Generate edge identifiers for path
         identifiers = self.generate_identifiers(ant.path)
         # Update pheromone value for each edge
@@ -193,3 +216,5 @@ class Pheromone():
             else:
                 new_value = (1 - self.evaporation) * old_value + (self.evaporation * (1 / (ant.cost * 10)))
             self.pheromone_matrix[identifier] = new_value
+        Log.header("PHEROMONE MATRIX AFTER %s UPDATE" % update_type)
+        Log.info(self.pheromone_matrix)

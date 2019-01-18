@@ -2,11 +2,13 @@
 # Licensed under MIT License
 
 from .aco import ACO
+from .log import Log
 
 
 class DeepSwarm:
     def __init__(self, backend):
         self.backend = backend
+        Log.enable()
 
     def find_topology(self, max_depth, swarm_size):
         """Finds neural network topology which has lowest loss
