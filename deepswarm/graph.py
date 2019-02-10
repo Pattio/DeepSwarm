@@ -2,28 +2,42 @@
 # Licensed under MIT License
 
 import random
-from .nodes import (Conv2DNode, DenseNode, DropoutNode, EndNode, FlattenNode, InputNode, MaxPool2DNode)
+from .nodes import (Conv2DNode, DenseNode, DropoutNode, EndNode, FlattenNode, InputNode, Pool2DNode)
 
 
 class Graph:
-    def __init__(self, current_depth=1):
+    def __init__(self, current_depth=0):
+        self.topology = []
         self.current_depth = current_depth
-        self.input_node = InputNode()
+        self.input_node = self.get_node(InputNode(), current_depth)
+        self.increase_depth()
+
+    def get_node(self, node, depth):
+        # If we are trying to insert node into not existing layer, we pad topology
+        # by adding empty dictionaries, untill required depth is reached
+        while depth > (len(self.topology) - 1):
+            self.topology.append({})
+
+        # If node already exists return it, otherwise add it to topology first
+        return self.topology[depth].setdefault(node.name, node)
 
     def increase_depth(self):
         self.current_depth += 1
 
     def generate_random_path(self):
-        path = [self.input_node.create_deepcopy()]
         current_node = self.input_node
-        for _ in range(self.current_depth):
-            current_node.expand()
-            # Stop expanding node, when it can't be expanded any more
-            if not current_node.neighbours:
-                break
+        path = [current_node.create_deepcopy()]
+        for depth in range(self.current_depth):
+            # Expand only if it haven't been expanded
+            if current_node.is_expanded is False:
+                available_transitions = current_node.available_transitions
+                for available_transition in available_transitions:
+                    neighbour_node = self.get_node(available_transition(), depth + 1)
+                    current_node.neighbours.append(neighbour_node)
+                current_node.is_expanded = True
             # Select new random node and append it to the path
-            random_index = random.randint(0, len(current_node.neighbours) - 1)
-            current_node = current_node.neighbours[random_index]
+            current_node = random.choice(current_node.neighbours)
+            current_node.select_random_attributes()
             # Add only copy of the node, so that original stays unmodified
             path.append(current_node.create_deepcopy())
         completed_path = self.complete_path(path)
@@ -34,7 +48,7 @@ class Graph:
         if type(path[-1]) is EndNode:
             return path
         # Otherwise complete the path and then return completed path
-        if type(path[-1]) in (Conv2DNode, MaxPool2DNode):
+        if type(path[-1]) in (Conv2DNode, Pool2DNode):
             path.append(FlattenNode())
         if type(path[-1]) in (FlattenNode, DenseNode, DropoutNode):
             path.append(EndNode())

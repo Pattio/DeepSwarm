@@ -2,39 +2,39 @@
 # Licensed under MIT License
 
 import copy
+import random
+
+
+class NodeAttribute:
+    def __init__(self, name, options):
+        self.name = name
+        self.dict = {str(option): 0.1 for option in options}
 
 
 class Node:
     def __init__(self, name):
         self.name = name
-        self.neighbours = []
         self.is_expanded = False
+        self.attributes = []
+        self.neighbours = []
+        self.available_transitions = []
 
-    @classmethod
-    def available_instances(cls):
-        return []
-
-    @staticmethod
-    def available_transitions():
-        return []
-
-    def expand(self):
-        # Expand node only if it has not been expanded before
-        if self.is_expanded:
-            return
-        else:
-            self.is_expanded = True
-
-        for node in self.available_transitions():
-            self.neighbours += node.available_instances()
+    def select_random_attributes(self):
+        random_attributes = {}
+        for attribute in self.attributes:
+            random_value = random.choice(list(attribute.dict.keys()))
+            random_attributes[attribute.name] = random_value
+        # For each selected attribute create class attribute
+        for key, value in random_attributes.items():
+            setattr(self, key, value)
 
     def __deepcopy__(self, memo):
         cls = self.__class__
         result = cls.__new__(cls)
         memo[id(self)] = result
         for k, v in self.__dict__.items():
-            # Skip neighbours to make copying more efficient
-            if k == "neighbours":
+            # Skip unnecessary stuff to make copying more efficient
+            if k in ["neighbours", "available_transitions", "attributes"]:
                 v = []
             setattr(result, k, copy.deepcopy(v, memo))
         return result
@@ -46,117 +46,54 @@ class Node:
 class InputNode(Node):
     def __init__(self):
         super().__init__("InputNode")
-
-    @staticmethod
-    def available_transitions():
-        return [
-            Conv2DNode,
-        ]
+        self.available_transitions = [Conv2DNode]
 
 
 class Conv2DNode(Node):
-    def __init__(self, kernel_size):
-        super().__init__("Conv2DNode-%d" % kernel_size)
-        self.kernel_size = kernel_size
-
-    @classmethod
-    def available_instances(cls):
-        return [
-            cls(1),
-            cls(3),
-            cls(5),
+    def __init__(self):
+        super().__init__("Conv2DNode")
+        self.attributes = [
+            NodeAttribute("filter_number", [16, 32, 64]),
+            NodeAttribute("kernel_size", [1, 3, 5]),
+            NodeAttribute("activation", ["ReLU"]),
         ]
+        self.available_transitions = [Conv2DNode, Pool2DNode, FlattenNode]
 
-    @staticmethod
-    def available_transitions():
-        return [
-            Conv2DNode,
-            MaxPool2DNode,
-            FlattenNode,
+
+class Pool2DNode(Node):
+    def __init__(self):
+        super().__init__("Pool2DNode")
+        self.attributes = [
+            NodeAttribute("type", ["max"]),
+            NodeAttribute("pool_size", [2]),
+            NodeAttribute("stride", [2, 3]),
         ]
-
-
-class MaxPool2DNode(Node):
-    def __init__(self, pool_size, strides):
-        super().__init__("MaxPool2DNode-%d-%d" % (pool_size, strides))
-        self.pool_size = pool_size
-        self.strides = strides
-
-    @classmethod
-    def available_instances(cls):
-        return [
-            cls(2, 2),
-            cls(2, 3),
-        ]
-
-    @staticmethod
-    def available_transitions():
-        return [
-            Conv2DNode,
-            FlattenNode,
-        ]
+        self.available_transitions = [Conv2DNode, FlattenNode]
 
 
 class FlattenNode(Node):
     def __init__(self):
         super().__init__("FlattenNode")
-
-    @classmethod
-    def available_instances(cls):
-        return [
-            cls(),
-        ]
-
-    @staticmethod
-    def available_transitions():
-        return [
-            DenseNode,
-        ]
+        self.available_transitions = [DenseNode]
 
 
 class DenseNode(Node):
-    def __init__(self, output_size, activation):
-        super().__init__("DenseNode-%d-%s" % (output_size, activation))
-        self.output_size = output_size
-        self.activation = activation
-
-    @classmethod
-    def available_instances(cls):
-        return [
-            # Todo: create file which contains all supported activation
-            # functions and use that instead of hardcoded value
-            cls(128, "relu"),
-            cls(256, "relu"),
-            cls(512, "relu"),
+    def __init__(self):
+        super().__init__("DenseNode")
+        self.attributes = [
+            NodeAttribute("output_size", [128, 256, 512]),
+            NodeAttribute("activation", ["ReLU"]),
         ]
-
-    @staticmethod
-    def available_transitions():
-        return [
-            DenseNode,
-            DropoutNode,
-        ]
+        self.available_transitions = [DenseNode, DropoutNode]
 
 
 class DropoutNode(Node):
-    def __init__(self, rate):
-        super().__init__("DropoutNode-%f" % rate)
-        self.rate = rate
-
-    @classmethod
-    def available_instances(cls):
-        return [
-            cls(0.1),
-            cls(0.2),
-            cls(0.3),
-            cls(0.4),
+    def __init__(self):
+        super().__init__("DropoutNode")
+        self.attributes = [
+            NodeAttribute("rate", [0.1, 0.3, 0.5]),
         ]
-
-    @staticmethod
-    def available_transitions():
-        return [
-            DenseNode,
-        ]
+        self.available_transitions = [DenseNode]
 
 
 class EndNode(Node):
