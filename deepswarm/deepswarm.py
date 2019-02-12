@@ -3,12 +3,14 @@
 
 from .aco import ACO
 from .log import Log
+from .storage import Storage
 
 
 class DeepSwarm:
     def __init__(self, backend):
         self.backend = backend
-        Log.enable()
+        self.storage = Storage()
+        Log.enable(self.storage)
 
     def find_topology(self, max_depth, swarm_size):
         """Finds neural network topology which has lowest loss

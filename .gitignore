@@ -7,4 +7,4 @@ __pycache__/
 deepswarm-env/
 
 # Log files
-*.log
+saves/

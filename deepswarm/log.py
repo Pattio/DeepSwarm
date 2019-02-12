@@ -16,7 +16,7 @@ class Log:
     HEADER_G = [Fore.WHITE, Back.GREEN, Style.BRIGHT]
 
     @classmethod
-    def enable(cls):
+    def enable(cls, storage):
         # Init colorama to enable colors
         colorama_init()
         # Get deepswarm logger
@@ -30,7 +30,7 @@ class Log:
         cls.logger.addHandler(stream_handler)
 
         # Create and setup file handler
-        file_handler = logging.FileHandler("deepswarm.log")
+        file_handler = logging.FileHandler(storage.current_path + "/deepswarm.log")
         file_formater = FileFormatter("%(asctime)s\n%(message)s")
         file_handler.setFormatter(file_formater)
         # Add file handle to logger
