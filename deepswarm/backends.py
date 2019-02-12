@@ -3,7 +3,7 @@
 
 import tensorflow as tf
 from tensorflow.keras import backend as K
-from .nodes import (Conv2DNode, DenseNode, DropoutNode, EndNode, FlattenNode, InputNode, MaxPool2DNode)
+from .nodes import (Conv2DNode, DenseNode, DropoutNode, EndNode, FlattenNode, InputNode, Pool2DNode)
 
 
 class BaseBackend:
@@ -69,11 +69,12 @@ class TFKerasBackend(BaseBackend):
                             activation=tf.nn.relu,
                         )
                     )
-            elif type(node) is MaxPool2DNode:
+            elif type(node) is Pool2DNode:
+                # TODO: add support for average
                 model.add(
                     tf.keras.layers.MaxPooling2D(
                         pool_size=node.pool_size,
-                        strides=node.strides,
+                        strides=node.stride,
                         padding='same',
                         data_format=data_format,
                     )
@@ -86,7 +87,7 @@ class TFKerasBackend(BaseBackend):
                 model.add(
                     tf.keras.layers.Dense(
                         units=node.output_size,
-                        activation=node.activation,
+                        activation=tf.nn.relu,
                     )
                 )
             elif type(node) is DropoutNode:

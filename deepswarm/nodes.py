@@ -3,12 +3,19 @@
 
 import copy
 import random
+from . import config as cfg
 
 
 class NodeAttribute:
     def __init__(self, name, options):
         self.name = name
-        self.dict = {str(option): 0.1 for option in options}
+        self.dict = {option: cfg.pheromone['start'] for option in options}
+
+
+class NeighbourNode:
+    def __init__(self, node, pheromone):
+        self.node = node
+        self.pheromone = pheromone
 
 
 class Node:
@@ -19,14 +26,24 @@ class Node:
         self.neighbours = []
         self.available_transitions = []
 
-    def select_random_attributes(self):
-        random_attributes = {}
+    def select_attributes(self, custom_select):
+        selected_attributes = {}
         for attribute in self.attributes:
-            random_value = random.choice(list(attribute.dict.keys()))
-            random_attributes[attribute.name] = random_value
+            value = custom_select(attribute.dict)
+            selected_attributes[attribute.name] = value
         # For each selected attribute create class attribute
-        for key, value in random_attributes.items():
+        for key, value in selected_attributes.items():
             setattr(self, key, value)
+
+    def select_custom_attributes(self, custom_select):
+        def select(dict):
+            return custom_select(list(dict.items()))[0]
+        self.select_attributes(select)
+
+    def select_random_attributes(self):
+        def select(dict):
+            return random.choice(list(dict.keys()))
+        self.select_attributes(select)
 
     def __deepcopy__(self, memo):
         cls = self.__class__
@@ -34,7 +51,7 @@ class Node:
         memo[id(self)] = result
         for k, v in self.__dict__.items():
             # Skip unnecessary stuff to make copying more efficient
-            if k in ["neighbours", "available_transitions", "attributes"]:
+            if k in ["neighbours", "available_transitions"]:
                 v = []
             setattr(result, k, copy.deepcopy(v, memo))
         return result

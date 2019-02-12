@@ -4,6 +4,7 @@
 
 import random
 import math
+from . import config as cfg
 from .graph import Graph
 from .log import Log
 
@@ -14,13 +15,7 @@ class ACO:
         self.max_iteration = max_iteration
         self.ants_number = ants_number
         self.backend = backend
-
         self.greediness = 0.5
-        self.pheromone = Pheromone(
-            pheromone_0=0.1,
-            decay=0.1,
-            evaporation=0.1,
-        )
 
     def search(self):
         """ Performs ant colony system optimization over the graph.
@@ -29,7 +24,7 @@ class ACO:
             ant which found best network topology
         """
         Log.header("STARTING ACO SEARCH", type="GREEN")
-        best_ant = Ant(self.graph.generate_random_path())
+        best_ant = Ant(self.graph.generate_path(self.random_select))
         best_ant.evaluate(self.backend)
         Log.info(best_ant)
 
@@ -44,7 +39,7 @@ class ACO:
             Log.header("BEST ANT DURING ITERATION")
             Log.info(best_ant)
             # Do global pheromone update
-            self.pheromone.update(ant=best_ant, local=False)
+            self.update_pheromone(ant=best_ant, update_rule=self.global_update)
             # Expand graph
             self.graph.increase_depth()
             Log.header("INCREASING SEARCH DEPTH TO %i" % self.graph.current_depth, type="RED")
@@ -55,41 +50,29 @@ class ACO:
         for ant_number in range(self.ants_number):
             Log.header("GENERATING ANT %i" % (ant_number + 1))
             ant = Ant()
-            # Generate ant's path based on pheremone
-            ant.path = self.generate_path()
+            # Generate ant's path using given ACO rule
+            ant.path = self.graph.generate_path(self.aco_select)
             # TODO: Check if path is unique if not then don't evaluate this ant
             # and use stats from already evaluated ant
             ant.evaluate(self.backend)
             ants.append(ant)
             Log.info(ant)
-            self.pheromone.update(ant=ant, local=True)
+            self.update_pheromone(ant=ant, update_rule=self.local_update)
         return ants
 
-    def generate_path(self):
-        """Generates path trough the graph, based on ACO rules
+    def random_select(self, neighbours):
+        current_node = random.choice(neighbours).node
+        current_node.select_random_attributes()
+        return current_node
 
-        Returns:
-            path which contains Node objects
-        """
-        path = [self.graph.input_node.create_deepcopy()]
-        path_identifier = path[0].name
-        current_node = self.graph.input_node
+    def aco_select(self, neighbours):
+        # Transform List of NeighbourNode objects to tuples (Node, Pheromone)
+        tuple_neighbours = [(n.node, n.pheromone) for n in neighbours]
+        current_node = self.aco_select_rule(tuple_neighbours)[0]
+        current_node.select_custom_attributes(self.aco_select_rule)
+        return current_node
 
-        for _ in range(self.graph.current_depth):
-            current_node.expand()
-            # Stop expanding node, when it can't be expanded any more
-            if not current_node.neighbours:
-                break
-            # Select neighbour and update current_node to be that neighbour
-            neighbour_index = self.select_neighbour(current_node, path_identifier)
-            current_node = current_node.neighbours[neighbour_index]
-            # Update path
-            path.append(current_node.create_deepcopy())
-            path_identifier += current_node.name
-        completed_path = self.graph.complete_path(path)
-        return completed_path
-
-    def select_neighbour(self, current_node, path_identifier):
+    def aco_select_rule(self, neighbours):
         """Selects neighbour node based on ant colony system transition probability
 
         Args:
@@ -100,10 +83,9 @@ class ACO:
         """
         probabilities = []
         denominator = 0.0
-        for neighbour in current_node.neighbours:
-            neighbour_pheromone = self.pheromone.get(path_identifier + neighbour.name)
-            probabilities.append(neighbour_pheromone)
-            denominator += neighbour_pheromone
+        for (neighbour, pheromone) in neighbours:
+            probabilities.append(pheromone)
+            denominator += pheromone
         # Try to perform greedy select - exploitation
         random_variable = random.uniform(0, 1)
         if random_variable <= self.greediness:
@@ -111,7 +93,7 @@ class ACO:
             max_probability = max(probabilities)
             max_indices = [i for i, j in enumerate(probabilities) if j == max_probability]
             neighbour_index = random.choice(max_indices)
-            return neighbour_index
+            return neighbours[neighbour_index]
         # Otherwise perform select using roulette wheel - exploration
         probabilities = [x / denominator for x in probabilities]
         probability_sum = sum(probabilities)
@@ -120,7 +102,41 @@ class ACO:
         for idx, probability in enumerate(probabilities):
             current_value += probability
             if current_value > random_treshold:
-                return idx
+                return neighbours[idx]
+
+    def update_pheromone(self, ant, update_rule):
+        current_node = self.graph.input_node
+        # Skip input node as it's connected to any previous node
+        for node in ant.path[1:]:
+            # Use node from path to retrieve it's corresponding node in graph
+            neighbour = next((x for x in current_node.neighbours if type(x.node) is type(node)), None)
+            # If path was closed using complete_path method, ignore rest of the path
+            if neighbour is None:
+                break
+            # Update pheromone connecting to neighbour
+            neighbour.pheromone = update_rule(
+                old_value=neighbour.pheromone,
+                cost=ant.cost
+            )
+            # Update attribute pheromone values
+            for attribute in neighbour.node.attributes:
+                # Find what attribute value was used for node
+                attribute_value = getattr(node, attribute.name)
+                # Retrieve pheromone for that value
+                old_pheromone_value = attribute.dict[attribute_value]
+                # Update pheromone
+                attribute.dict[attribute_value] = update_rule(
+                    old_value=old_pheromone_value,
+                    cost=ant.cost
+                )
+            # Advance current node
+            current_node = neighbour.node
+
+    def local_update(self, old_value, cost):
+        return (1 - cfg.pheromone["decay"]) * old_value + (cfg.pheromone["decay"] * cfg.pheromone["start"])
+
+    def global_update(self, old_value, cost):
+        return (1 - cfg.pheromone["evaporation"]) * old_value + (cfg.pheromone["evaporation"] * (1 / (cost * 10)))
 
 
 class Ant:
@@ -134,7 +150,11 @@ class Ant:
         return self.cost < other.cost
 
     def __str__(self):
-        path_string = ' -> '.join([node.name for node in self.path])
+        described_nodes = []
+        for node in self.path:
+            attributes = ', '.join([a.name + ":" + str(getattr(node, a.name)) for a in node.attributes])
+            described_nodes.append(node.name + "(" + attributes + ")")
+        path_string = ' -> '.join([described_node for described_node in described_nodes])
 
         return "======= \n Ant: %s \n Loss: %f \n Accuracy: %f \n Path: %s \n=======" % (
             hex(id(self)),
@@ -146,75 +166,3 @@ class Ant:
     def evaluate(self, backend):
         self.model = backend.generate_model(self.path)
         (self.cost, self.accuracy) = backend.evaluate_model(self.model)
-
-
-class Pheromone():
-    # TODO: introduce pheromone importance
-    def __init__(self, pheromone_0, decay, evaporation):
-        self.pheromone_0 = pheromone_0
-        self.decay = decay
-        self.evaporation = evaporation
-        self.pheromone_matrix = {}
-
-    def get(self, identifier):
-        """Retrieves pheromone amount for specified identifier.
-
-        If edge doesn't exists yet, new edge with start pheromone value is created
-
-        Args:
-            identifier (string): identifier, which describes edge, this edge is
-            describied by using full path i.e. InputNodeConv2DNode3FlattenNode
-        Returns:
-            amount of pheromone on the last edge i.e if path was
-            InputNodeConv2DNode3FlattenNode then returned number describes
-            pheromone amount on edge Conv2DNode3-FlattenNode
-
-        """
-        # TODO: Generate hash value to save memory space
-        return self.pheromone_matrix.setdefault(identifier, self.pheromone_0)
-
-    def generate_identifiers(self, path):
-        """Generates identifier for each path element
-
-        Args:
-            path ([Node]): list of nodes describing path
-        Returns:
-            list of identifiers, where i-th element corresponds to i-th node identifier
-        """
-        path_identifier = ""
-        path_identifiers = []
-        for node in path:
-            # Append each node's name to identifier to generate unique string
-            path_identifier += node.name
-            path_identifiers.append(path_identifier)
-        return path_identifiers
-
-    def exists(self, path):
-        '''
-        TODO: refactor method, because sometimes even though identifier exists
-        it doesn't mean that it was evaluated. For example if you select neighbour,
-        identifiers for all nodes will be created, however not all paths will be
-        evaluated.
-        '''
-
-        # Generate identifiers from path
-        identifiers = self.generate_identifiers(path)
-        # Check if last element, which describes whole path is already in matrix
-        return identifiers[-1] in self.pheromone_matrix
-
-    def update(self, ant, local):
-        update_type = "LOCAL" if local else "GLOBAL"
-        Log.header("PHEROMONE MATRIX BEFORE %s UPDATE" % update_type)
-        Log.info(self.pheromone_matrix)
-        # Generate edge identifiers for path
-        identifiers = self.generate_identifiers(ant.path)
-        # Update pheromone value for each edge
-        for identifier in identifiers:
-            old_value = self.get(identifier)
-            if local:
-                new_value = (1 - self.decay) * old_value + (self.decay * self.pheromone_0)
-            else:
-                new_value = (1 - self.evaporation) * old_value + (self.evaporation * (1 / (ant.cost * 10)))
-            self.pheromone_matrix[identifier] = new_value
-        Log.header("PHEROMONE MATRIX AFTER %s UPDATE" % update_type)
-        Log.info(self.pheromone_matrix)
