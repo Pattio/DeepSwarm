@@ -24,7 +24,8 @@ class DeepSwarm:
         aco = ACO(
             max_iteration=max_depth,
             ants_number=swarm_size,
-            backend=self.backend
+            backend=self.backend,
+            storage=self.storage,
         )
         best_ant = aco.search()
         return best_ant.model

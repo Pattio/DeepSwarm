@@ -1,7 +1,6 @@
 # Copyright (c) 2019 Edvinas Byla
 # Licensed under MIT License
 
-
 import json
 import logging
 import re
@@ -30,7 +29,7 @@ class Log:
         cls.logger.addHandler(stream_handler)
 
         # Create and setup file handler
-        file_handler = logging.FileHandler(storage.current_path + "/deepswarm.log")
+        file_handler = logging.FileHandler(storage.current_path / "deepswarm.log")
         file_formater = FileFormatter("%(asctime)s\n%(message)s")
         file_handler.setFormatter(file_formater)
         # Add file handle to logger

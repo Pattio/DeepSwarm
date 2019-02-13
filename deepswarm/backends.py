@@ -25,6 +25,17 @@ class BaseBackend:
         """
         raise NotImplementedError()
 
+    def train_model(self, model):
+        """Train model which was created using generate_model method.
+
+        Args:
+            model: model which represents neural network structure
+        Returns:
+            model
+
+        """
+        raise NotImplementedError()
+
     def evaluate_model(self, model):
         """Evaluate model which was created using generate_model method.
 
@@ -33,6 +44,26 @@ class BaseBackend:
         Returns:
             loss & accuracy tuple
 
+        """
+        raise NotImplementedError()
+
+    def save_model(self, model, path):
+        """Saves model on disk
+
+        Args:
+            model: model which represents neural network structure
+            path: string which represents model location
+        """
+        raise NotImplementedError()
+
+    def load_model(self, path):
+        """Load model from disk, in case of fail should return None
+
+        Args:
+            path: string which represents model location
+        Returns:
+            model: model which represents neural network structure, or in case
+            fail None
         """
         raise NotImplementedError()
 
@@ -103,12 +134,25 @@ class TFKerasBackend(BaseBackend):
                 )
         return model
 
-    def evaluate_model(self, model):
+    def train_model(self, model):
         model.compile(
             optimizer='adam',
             loss='sparse_categorical_crossentropy',
             metrics=['accuracy']
         )
-        model.fit(self.x_train, self.y_train, epochs=3, batch_size=1000)
+        model.fit(self.x_train, self.y_train, epochs=1, batch_size=1000)
+        return model
+
+    def evaluate_model(self, model):
         loss, accuracy = model.evaluate(self.x_test, self.y_test)
         return (loss, accuracy)
+
+    def save_model(self, model, path):
+        model.save(path)
+
+    def load_model(self, path):
+        try:
+            model = tf.keras.models.load_model(path)
+            return model
+        except:
+            return None

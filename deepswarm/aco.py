@@ -1,7 +1,7 @@
 # Copyright (c) 2019 Edvinas Byla
 # Licensed under MIT License
 
-
+import hashlib
 import random
 import math
 from . import config as cfg
@@ -10,12 +10,13 @@ from .log import Log
 
 
 class ACO:
-    def __init__(self, max_iteration, ants_number, backend):
+    def __init__(self, max_iteration, ants_number, backend, storage):
         self.graph = Graph()
         self.max_iteration = max_iteration
         self.ants_number = ants_number
         self.backend = backend
         self.greediness = 0.5
+        self.storage = storage
 
     def search(self):
         """ Performs ant colony system optimization over the graph.
@@ -25,7 +26,7 @@ class ACO:
         """
         Log.header("STARTING ACO SEARCH", type="GREEN")
         best_ant = Ant(self.graph.generate_path(self.random_select))
-        best_ant.evaluate(self.backend)
+        best_ant.evaluate(self.backend, self.storage)
         Log.info(best_ant)
 
         for _ in range(self.max_iteration):
@@ -54,7 +55,7 @@ class ACO:
             ant.path = self.graph.generate_path(self.aco_select)
             # TODO: Check if path is unique if not then don't evaluate this ant
             # and use stats from already evaluated ant
-            ant.evaluate(self.backend)
+            ant.evaluate(self.backend, self.storage)
             ants.append(ant)
             Log.info(ant)
             self.update_pheromone(ant=ant, update_rule=self.local_update)
@@ -145,24 +146,44 @@ class Ant:
         self.cost = math.inf
         self.accuracy = 0.0
         self.model = None
+        self.path_description = None
+        self.path_hash = None
 
     def __lt__(self, other):
         return self.cost < other.cost
 
     def __str__(self):
+        return "======= \n Ant: %s \n Loss: %f \n Accuracy: %f \n Path: %s \n Hash: %s \n=======" % (
+            hex(id(self)),
+            self.cost,
+            self.accuracy,
+            self.path_description,
+            self.path_hash,
+        )
+
+    def describe_path(self):
         described_nodes = []
         for node in self.path:
             attributes = ', '.join([a.name + ":" + str(getattr(node, a.name)) for a in node.attributes])
             described_nodes.append(node.name + "(" + attributes + ")")
-        path_string = ' -> '.join([described_node for described_node in described_nodes])
+        path_description = ' -> '.join([described_node for described_node in described_nodes])
+        return path_description
 
-        return "======= \n Ant: %s \n Loss: %f \n Accuracy: %f \n Path: %s \n=======" % (
-            hex(id(self)),
-            self.cost,
-            self.accuracy,
-            path_string
-        )
-
-    def evaluate(self, backend):
-        self.model = backend.generate_model(self.path)
-        (self.cost, self.accuracy) = backend.evaluate_model(self.model)
+    def evaluate(self, backend, storage):
+        # Update path description
+        self.path_description = self.describe_path()
+        self.path_hash = hashlib.sha3_256(self.path_description.encode('utf-8')).hexdigest()
+        # Check if model already exists if yes, then just re-use it
+        existing_model = storage.load_model(backend, self.path_hash)
+        if existing_model is None:
+            # Generate model
+            self.model = backend.generate_model(self.path)
+        else:
+            # Re-use model
+            self.model = existing_model
+        # Train model
+        self.model = backend.train_model(self.model)
+        # Evaluate model
+        self.cost, self.accuracy = backend.evaluate_model(self.model)
+        # Save model
+        storage.save_model(backend, self.model, self.path_hash)
