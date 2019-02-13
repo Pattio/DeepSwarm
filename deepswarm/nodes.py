@@ -36,14 +36,10 @@ class Node:
             setattr(self, key, value)
 
     def select_custom_attributes(self, custom_select):
-        def select(dict):
-            return custom_select(list(dict.items()))[0]
-        self.select_attributes(select)
+        self.select_attributes(lambda dict: custom_select(list(dict.items()))[0])
 
     def select_random_attributes(self):
-        def select(dict):
-            return random.choice(list(dict.keys()))
-        self.select_attributes(select)
+        self.select_attributes(lambda dict: random.choice(list(dict.keys())))
 
     def __deepcopy__(self, memo):
         cls = self.__class__
