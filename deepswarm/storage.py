@@ -11,13 +11,19 @@ from . import config as cfg
 class Storage:
     DIR = {
         "MODEL": "models",
-        "CLASS": "classes",
+        "OBJECT": "objects",
     }
 
-    def __init__(self):
+    ITEM = {
+        "BACKUP": "backup"
+    }
+
+    def __init__(self, deepswarm):
         self.current_path = None
-        self.load_from_save = False
+        self.loaded_from_save = False
+        self.backup = None
         self.model_cache = {}
+        self.deepswarm = deepswarm
         self.setup_path()
         self.setup_directories()
 
@@ -30,9 +36,10 @@ class Storage:
         user_folder = cfg.SAVE_FOLDER
         if user_folder is not None and (base_path / user_folder).exists():
             self.current_path = base_path / user_folder
-            self.load_from_save = True
-            # If it's load from save then load all the models into model cache
-            self.load_model_cache()
+            self.loaded_from_save = True
+            # Store deepswarm object to backup
+            self.backup = self.load_object(Storage.ITEM["BACKUP"])
+            self.backup.storage.loaded_from_save = True
             return
         # Otherwise create new directory
         directory_path = base_path / datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
@@ -47,10 +54,8 @@ class Storage:
             if not directory_path.exists():
                 directory_path.mkdir()
 
-    def load_model_cache(self):
-        for item in (self.current_path / Storage.DIR["MODEL"]).iterdir():
-            if not item.is_dir():
-                self.model_cache[item] = True
+    def perform_backup(self):
+        self.save_object(self.deepswarm, Storage.ITEM["BACKUP"])
 
     def save_model(self, backend, model, model_name):
         path = self.current_path / Storage.DIR["MODEL"] / model_name
@@ -66,11 +71,11 @@ class Storage:
         else:
             return None
 
-    def save(self, data, name):
-        with open(self.current_path + '/' + name, 'wb') as f:
+    def save_object(self, data, name):
+        with open(self.current_path / Storage.DIR["OBJECT"] / name, 'wb') as f:
             pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
 
-    def load(self, name):
-        with open(self.current_path + '/' + name, 'rb') as f:
+    def load_object(self, name):
+        with open(self.current_path / Storage.DIR["OBJECT"] / name, 'rb') as f:
             data = pickle.load(f)
         return data

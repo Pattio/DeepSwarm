@@ -9,8 +9,11 @@ from .storage import Storage
 class DeepSwarm:
     def __init__(self, backend):
         self.backend = backend
-        self.storage = Storage()
+        self.storage = Storage(self)
         Log.enable(self.storage)
+        # Try to load from backup
+        if self.storage.loaded_from_save:
+            self.__dict__ = self.storage.backup.__dict__
 
     def find_topology(self, max_depth, swarm_size):
         """Finds neural network topology which has lowest loss
@@ -21,11 +24,13 @@ class DeepSwarm:
         Returns:
             network model in the format of backend which was used during initialization
         """
-        aco = ACO(
-            max_iteration=max_depth,
-            ants_number=swarm_size,
-            backend=self.backend,
-            storage=self.storage,
-        )
-        best_ant = aco.search()
+        # Create new object only if there are no backups
+        if not self.storage.loaded_from_save:
+            self.aco = ACO(
+                max_depth=max_depth,
+                ants_number=swarm_size,
+                backend=self.backend,
+                storage=self.storage,
+            )
+        best_ant = self.aco.search()
         return best_ant.model

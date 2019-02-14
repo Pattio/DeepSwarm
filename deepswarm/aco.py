@@ -10,9 +10,10 @@ from .log import Log
 
 
 class ACO:
-    def __init__(self, max_iteration, ants_number, backend, storage):
+    def __init__(self, max_depth, ants_number, backend, storage):
         self.graph = Graph()
-        self.max_iteration = max_iteration
+        self.current_depth = 0
+        self.max_depth = max_depth
         self.ants_number = ants_number
         self.backend = backend
         self.greediness = 0.5
@@ -24,27 +25,34 @@ class ACO:
         Returns:
             ant which found best network topology
         """
-        Log.header("STARTING ACO SEARCH", type="GREEN")
-        best_ant = Ant(self.graph.generate_path(self.random_select))
-        best_ant.evaluate(self.backend, self.storage)
-        Log.info(best_ant)
 
-        for _ in range(self.max_iteration):
+        # Generate random ant only if search started from zero
+        if not self.storage.loaded_from_save:
+            Log.header("STARTING ACO SEARCH", type="GREEN")
+            self.best_ant = Ant(self.graph.generate_path(self.random_select))
+            self.best_ant.evaluate(self.backend, self.storage)
+            Log.info(self.best_ant)
+        else:
+            Log.header("RESUMING ACO SEARCH", type="GREEN")
+
+        while self.graph.current_depth <= self.max_depth:
             ants = self.generate_ants()
             ants.sort()
             # If any of the new solutions has lower cost than best solution, update best
-            if ants[0].cost < best_ant.cost:
-                best_ant = ants[0]
+            if ants[0].cost < self.best_ant.cost:
+                self.best_ant = ants[0]
                 Log.header("NEW BEST ANT FOUND", type="GREEN")
 
             Log.header("BEST ANT DURING ITERATION")
-            Log.info(best_ant)
+            Log.info(self.best_ant)
             # Do global pheromone update
-            self.update_pheromone(ant=best_ant, update_rule=self.global_update)
+            self.update_pheromone(ant=self.best_ant, update_rule=self.global_update)
             # Expand graph
             self.graph.increase_depth()
             Log.header("INCREASING SEARCH DEPTH TO %i" % self.graph.current_depth, type="RED")
-        return best_ant
+            # Do a backup
+            self.storage.perform_backup()
+        return self.best_ant
 
     def generate_ants(self):
         ants = []
@@ -151,6 +159,17 @@ class Ant:
 
     def __lt__(self, other):
         return self.cost < other.cost
+
+    def __getstate__(self):
+        # Prevent pickle from saving model object
+        state = self.__dict__.copy()
+        del state["model"]
+        return state
+
+    def __setstate__(self, state):
+        # Set model object to None
+        self.__dict__.update(state)
+        self.model = None
 
     def __str__(self):
         return "======= \n Ant: %s \n Loss: %f \n Accuracy: %f \n Path: %s \n Hash: %s \n=======" % (
