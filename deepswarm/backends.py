@@ -82,7 +82,7 @@ class TFKerasBackend(BaseBackend):
                 if idx > 0 and type(path[idx - 1]) is InputNode:
                     model.add(
                         tf.keras.layers.Conv2D(
-                            filters=2,
+                            filters=node.filter_number,
                             kernel_size=node.kernel_size,
                             padding='same',
                             data_format=data_format,
@@ -93,7 +93,7 @@ class TFKerasBackend(BaseBackend):
                 else:
                     model.add(
                         tf.keras.layers.Conv2D(
-                            filters=2,
+                            filters=node.filter_number,
                             kernel_size=node.kernel_size,
                             padding='same',
                             data_format=data_format,
