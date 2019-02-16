@@ -47,9 +47,9 @@ class ACO:
             Log.info(self.best_ant)
             # Do global pheromone update
             self.update_pheromone(ant=self.best_ant, update_rule=self.global_update)
-            # Expand graph
+            # Print pheromone information and increase graph's depth
+            self.graph.show_pheromone()
             self.graph.increase_depth()
-            Log.header("INCREASING SEARCH DEPTH TO %i" % self.graph.current_depth, type="RED")
             # Do a backup
             self.storage.perform_backup()
         return self.best_ant

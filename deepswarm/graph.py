@@ -3,6 +3,7 @@
 
 
 from . import config as cfg
+from .log import Log
 from .nodes import (Conv2DNode, DenseNode, DropoutNode, EndNode, FlattenNode,
     InputNode, NeighbourNode, Pool2DNode)
 
@@ -73,3 +74,23 @@ class Graph:
         if type(path[-1]) in (FlattenNode, DenseNode, DropoutNode):
             path.append(self.get_node(EndNode(), len(path)))
         return path
+
+    def show_pheromone(self):
+        Log.header("PHEROMONE START", type="RED")
+        for idx, layer in enumerate(self.topology):
+            info = []
+            for node in layer.values():
+                for neighbour in node.neighbours:
+                    info.append("%s [%s] -> %f -> %s [%s]" % (node.name, hex(id(node)),
+                        neighbour.pheromone, neighbour.node.name, hex(id(neighbour.node))))
+                    # If neighbour node doesn't have any attributes skip attribute info
+                    if not neighbour.node.attributes:
+                        continue
+                    info.append("\t%s [%s]:" % (neighbour.node.name, hex(id(neighbour.node))))
+                    for attribute in neighbour.node.attributes:
+                        info.append("\t\t%s: %s" % (attribute.name, attribute.dict))
+            if info:
+                Log.header("Layer %d" % (idx + 1))
+                for item in info:
+                    Log.info(item)
+        Log.header("PHEROMONE END", type="RED")
