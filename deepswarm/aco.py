@@ -29,6 +29,7 @@ class ACO:
         # Generate random ant only if search started from zero
         if not self.storage.loaded_from_save:
             Log.header("STARTING ACO SEARCH", type="GREEN")
+            Log.info("Max depth: %s\t Ant count: %s" % (self.max_depth, self.ants_number))
             self.best_ant = Ant(self.graph.generate_path(self.random_select))
             self.best_ant.evaluate(self.backend, self.storage)
             Log.info(self.best_ant)
