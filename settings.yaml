@@ -1,5 +1,6 @@
 DeepSwarm:
     save_folder:
+    metrics: accuracy
     pheromone:
         start: 0.1
         decay: 0.1

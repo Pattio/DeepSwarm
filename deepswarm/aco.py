@@ -4,7 +4,7 @@
 import hashlib
 import random
 import math
-from . import cfg
+from . import cfg, comparison_operator
 from .graph import Graph
 from .log import Log
 
@@ -38,9 +38,10 @@ class ACO:
 
         while self.graph.current_depth <= self.max_depth:
             ants = self.generate_ants()
-            ants.sort()
+            # Sort ants depending on user selected metric
+            ants.sort() if cfg['metrics'] == 'loss' else ants.sort(reverse=True)
             # If any of the new solutions has lower cost than best solution, update best
-            if ants[0].cost < self.best_ant.cost:
+            if comparison_operator(ants[0].cost, self.best_ant.cost):
                 self.best_ant = ants[0]
                 Log.header("NEW BEST ANT FOUND", type="GREEN")
 
@@ -146,16 +147,22 @@ class ACO:
         return (1 - cfg['pheromone']['decay']) * old_value + (cfg['pheromone']['decay'] * cfg['pheromone']['start'])
 
     def global_update(self, old_value, cost):
-        return (1 - cfg['pheromone']['evaporation']) * old_value + (cfg['pheromone']['evaporation'] * (1 / (cost * 10)))
+        # Calculate solution cost based on metrics
+        added_pheromone = (1 / (cost * 10)) if cfg['metrics'] == 'loss' else cost
+        return (1 - cfg['pheromone']['evaporation']) * old_value + (cfg['pheromone']['evaporation'] * added_pheromone)
 
 
 class Ant:
     def __init__(self, path=[]):
         self.path = path
-        self.cost = math.inf
+        self.loss = math.inf
         self.accuracy = 0.0
         self.path_description = None
         self.path_hash = None
+
+    @property
+    def cost(self):
+        return self.loss if cfg['metrics'] == 'loss' else self.accuracy
 
     def __lt__(self, other):
         return self.cost < other.cost
@@ -163,7 +170,7 @@ class Ant:
     def __str__(self):
         return "======= \n Ant: %s \n Loss: %f \n Accuracy: %f \n Path: %s \n Hash: %s \n=======" % (
             hex(id(self)),
-            self.cost,
+            self.loss,
             self.accuracy,
             self.path_description,
             self.path_hash,
@@ -192,6 +199,6 @@ class Ant:
         # Train model
         new_model = backend.train_model(new_model)
         # Evaluate model
-        self.cost, self.accuracy = backend.evaluate_model(new_model)
+        self.loss, self.accuracy = backend.evaluate_model(new_model)
         # Save model
         storage.save_model(backend, new_model, self.path_hash)

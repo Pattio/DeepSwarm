@@ -153,12 +153,19 @@ class TFKerasBackend(BaseBackend):
             metrics=['accuracy']
         )
 
-        early_stop_callback = tf.keras.callbacks.EarlyStopping(
-            monitor='val_loss',
-            patience=cfg['backend']['patience'],
-            verbose=1
-        )
+        early_stop_parameters = {
+            'patience': cfg['backend']['patience'],
+            'verbose': 1
+        }
+        # Set user defined metrics
+        if cfg['metrics'] == 'loss':
+            early_stop_parameters['monitor'] = 'val_loss'
+        else:
+            early_stop_parameters['monitor'] = 'val_acc'
 
+        early_stop_callback = tf.keras.callbacks.EarlyStopping(**early_stop_parameters)
+
+        # Setup training parameters
         fit_parameters = {
             'x': self.dataset.x_train,
             'y': self.dataset.y_train,
