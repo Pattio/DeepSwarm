@@ -7,9 +7,20 @@ from . import cfg
 from .nodes import (Conv2DNode, DenseNode, DropoutNode, EndNode, FlattenNode, InputNode, Pool2DNode)
 
 
+class Dataset:
+    def __init__(self, training_examples, training_labels, testing_examples, testing_labels,
+     validation_data=None, validation_split=0.1):
+        self.x_train = training_examples
+        self.y_train = training_labels
+        self.x_test = testing_examples
+        self.y_test = testing_labels
+        self.validation_data = validation_data
+        self.validation_split = validation_split
+
+
 class BaseBackend:
     def __init__(self, dataset, input_shape, output_size):
-        (self.x_train, self.y_train), (self.x_test, self.y_test) = dataset
+        self.dataset = dataset
         self.input_shape = input_shape
         self.output_size = output_size
 
@@ -141,16 +152,33 @@ class TFKerasBackend(BaseBackend):
             loss='sparse_categorical_crossentropy',
             metrics=['accuracy']
         )
-        model.fit(
-            self.x_train,
-            self.y_train,
-            epochs=cfg['backend']['epochs'],
-            batch_size=cfg['backend']['batch_size']
+
+        early_stop_callback = tf.keras.callbacks.EarlyStopping(
+            monitor='val_loss',
+            patience=cfg['backend']['patience'],
+            verbose=1
         )
+
+        fit_parameters = {
+            'x': self.dataset.x_train,
+            'y': self.dataset.y_train,
+            'epochs': cfg['backend']['epochs'],
+            'batch_size': cfg['backend']['batch_size'],
+            'callbacks': [early_stop_callback],
+        }
+
+        # If no validation data was provided use validation split
+        if self.dataset.validation_data is None:
+            fit_parameters['validation_split'] = self.dataset.validation_split
+        # Othwerwise use provided validation data
+        else:
+            fit_parameters['validation_data'] = self.dataset.validation_data
+        # Train and return model
+        model.fit(**fit_parameters)
         return model
 
     def evaluate_model(self, model):
-        loss, accuracy = model.evaluate(self.x_test, self.y_test)
+        loss, accuracy = model.evaluate(self.dataset.x_test, self.dataset.y_test)
         return (loss, accuracy)
 
     def save_model(self, model, path):
