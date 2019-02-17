@@ -5,7 +5,7 @@ import os
 import pickle
 from datetime import datetime
 from pathlib import Path
-from . import config as cfg
+from . import cfg
 
 
 class Storage:
@@ -33,7 +33,7 @@ class Storage:
         if not base_path.exists():
             base_path.mkdir()
         # Check if user specified save folder, which should be used to load data
-        user_folder = cfg.SAVE_FOLDER
+        user_folder = cfg['save_folder']
         if user_folder is not None and (base_path / user_folder).exists():
             self.current_path = base_path / user_folder
             self.loaded_from_save = True

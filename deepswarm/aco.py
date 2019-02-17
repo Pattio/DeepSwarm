@@ -4,7 +4,7 @@
 import hashlib
 import random
 import math
-from . import config as cfg
+from . import cfg
 from .graph import Graph
 from .log import Log
 
@@ -143,10 +143,10 @@ class ACO:
             current_node = neighbour.node
 
     def local_update(self, old_value, cost):
-        return (1 - cfg.pheromone["decay"]) * old_value + (cfg.pheromone["decay"] * cfg.pheromone["start"])
+        return (1 - cfg['pheromone']['decay']) * old_value + (cfg['pheromone']['decay'] * cfg['pheromone']['start'])
 
     def global_update(self, old_value, cost):
-        return (1 - cfg.pheromone["evaporation"]) * old_value + (cfg.pheromone["evaporation"] * (1 / (cost * 10)))
+        return (1 - cfg['pheromone']['evaporation']) * old_value + (cfg['pheromone']['evaporation'] * (1 / (cost * 10)))
 
 
 class Ant:

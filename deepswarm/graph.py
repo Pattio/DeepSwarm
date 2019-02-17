@@ -1,8 +1,7 @@
 # Copyright (c) 2019 Edvinas Byla
 # Licensed under MIT License
 
-
-from . import config as cfg
+from . import cfg
 from .log import Log
 from .nodes import (Conv2DNode, DenseNode, DropoutNode, EndNode, FlattenNode,
     InputNode, NeighbourNode, Pool2DNode)
@@ -55,7 +54,7 @@ class Graph:
             available_transitions = node.available_transitions
             for available_transition in available_transitions:
                 neighbour_node = self.get_node(available_transition(), depth + 1)
-                node.neighbours.append(NeighbourNode(neighbour_node, cfg.pheromone["start"]))
+                node.neighbours.append(NeighbourNode(neighbour_node, cfg['pheromone']['start']))
             node.is_expanded = True
         # Return value indicating if node has neigbours after beign expanded
         return len(node.neighbours) > 0

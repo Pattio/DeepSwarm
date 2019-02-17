@@ -2,14 +2,15 @@
 # Licensed under MIT License
 
 import copy
+import importlib
 import random
-from . import config as cfg
+from . import cfg, nodes
 
 
 class NodeAttribute:
     def __init__(self, name, options):
         self.name = name
-        self.dict = {option: cfg.pheromone['start'] for option in options}
+        self.dict = {option: cfg['pheromone']['start'] for option in options}
 
 
 class NeighbourNode:
@@ -22,9 +23,22 @@ class Node:
     def __init__(self, name):
         self.name = name
         self.is_expanded = False
-        self.attributes = []
         self.neighbours = []
+        self.setup_attributes()
+        self.setup_transitions()
+
+    def setup_attributes(self):
+        self.attributes = []
+        for attribute_name in nodes[self.name]['attributes']:
+            attribute_value = nodes[self.name]['attributes'][attribute_name]
+            self.attributes.append(NodeAttribute(attribute_name, attribute_value))
+
+    def setup_transitions(self):
         self.available_transitions = []
+        module = importlib.import_module('deepswarm.nodes')
+        for transition_name in nodes[self.name]['transitions']:
+            transition_class = getattr(module, transition_name)
+            self.available_transitions.append(transition_class)
 
     def select_attributes(self, custom_select):
         selected_attributes = {}
@@ -59,54 +73,31 @@ class Node:
 class InputNode(Node):
     def __init__(self):
         super().__init__("InputNode")
-        self.available_transitions = [Conv2DNode]
 
 
 class Conv2DNode(Node):
     def __init__(self):
         super().__init__("Conv2DNode")
-        self.attributes = [
-            NodeAttribute("filter_number", [16, 32, 64]),
-            NodeAttribute("kernel_size", [1, 3, 5]),
-            NodeAttribute("activation", ["ReLU"]),
-        ]
-        self.available_transitions = [Conv2DNode, Pool2DNode, FlattenNode]
 
 
 class Pool2DNode(Node):
     def __init__(self):
         super().__init__("Pool2DNode")
-        self.attributes = [
-            NodeAttribute("type", ["max"]),
-            NodeAttribute("pool_size", [2]),
-            NodeAttribute("stride", [2, 3]),
-        ]
-        self.available_transitions = [Conv2DNode, FlattenNode]
 
 
 class FlattenNode(Node):
     def __init__(self):
         super().__init__("FlattenNode")
-        self.available_transitions = [DenseNode]
 
 
 class DenseNode(Node):
     def __init__(self):
         super().__init__("DenseNode")
-        self.attributes = [
-            NodeAttribute("output_size", [128, 256, 512]),
-            NodeAttribute("activation", ["ReLU"]),
-        ]
-        self.available_transitions = [DenseNode, DropoutNode]
 
 
 class DropoutNode(Node):
     def __init__(self):
         super().__init__("DropoutNode")
-        self.attributes = [
-            NodeAttribute("rate", [0.1, 0.3, 0.5]),
-        ]
-        self.available_transitions = [DenseNode]
 
 
 class EndNode(Node):
