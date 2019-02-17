@@ -154,23 +154,11 @@ class Ant:
         self.path = path
         self.cost = math.inf
         self.accuracy = 0.0
-        self.model = None
         self.path_description = None
         self.path_hash = None
 
     def __lt__(self, other):
         return self.cost < other.cost
-
-    def __getstate__(self):
-        # Prevent pickle from saving model object
-        state = self.__dict__.copy()
-        del state["model"]
-        return state
-
-    def __setstate__(self, state):
-        # Set model object to None
-        self.__dict__.update(state)
-        self.model = None
 
     def __str__(self):
         return "======= \n Ant: %s \n Loss: %f \n Accuracy: %f \n Path: %s \n Hash: %s \n=======" % (
@@ -197,13 +185,13 @@ class Ant:
         existing_model = storage.load_model(backend, self.path_hash)
         if existing_model is None:
             # Generate model
-            self.model = backend.generate_model(self.path)
+            new_model = backend.generate_model(self.path)
         else:
             # Re-use model
-            self.model = existing_model
+            new_model = existing_model
         # Train model
-        self.model = backend.train_model(self.model)
+        new_model = backend.train_model(new_model)
         # Evaluate model
-        self.cost, self.accuracy = backend.evaluate_model(self.model)
+        self.cost, self.accuracy = backend.evaluate_model(new_model)
         # Save model
-        storage.save_model(backend, self.model, self.path_hash)
+        storage.save_model(backend, new_model, self.path_hash)

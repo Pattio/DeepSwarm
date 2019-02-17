@@ -33,4 +33,4 @@ class DeepSwarm:
                 storage=self.storage,
             )
         best_ant = self.aco.search()
-        return best_ant.model
+        return best_ant
