@@ -3,6 +3,7 @@
 
 import tensorflow as tf
 from tensorflow.keras import backend as K
+from . import cfg
 from .nodes import (Conv2DNode, DenseNode, DropoutNode, EndNode, FlattenNode, InputNode, Pool2DNode)
 
 
@@ -140,7 +141,12 @@ class TFKerasBackend(BaseBackend):
             loss='sparse_categorical_crossentropy',
             metrics=['accuracy']
         )
-        model.fit(self.x_train, self.y_train, epochs=1, batch_size=1000)
+        model.fit(
+            self.x_train,
+            self.y_train,
+            epochs=cfg['backend']['epochs'],
+            batch_size=cfg['backend']['batch_size']
+        )
         return model
 
     def evaluate_model(self, model):
