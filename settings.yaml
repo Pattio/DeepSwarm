@@ -48,6 +48,14 @@ Nodes:
         transitions:
             DenseNode: 0.3
         repetition_penalty: 0.5
+    DenseNode:
+        attributes:
+            output_size: [32, 64, 128, 256]
+            activation: ["ReLU"]
+        transitions:
+            DenseNode: 0.3
+            DropoutNode: 0.7
+        repetition_penalty: 0.5
     DropoutNode:
         attributes:
             rate: [0.1, 0.3, 0.5]
