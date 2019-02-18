@@ -37,7 +37,7 @@ class ACO:
             Log.header("RESUMING ACO SEARCH", type="GREEN")
 
         while self.graph.current_depth <= self.max_depth:
-            Log.header("Current search depth is %i" % self.graph.current_depth, type="RED")
+            Log.header("Current search depth is %i" % self.graph.current_depth, type="GREEN")
             ants = self.generate_ants()
             # Sort ants depending on user selected metric
             ants.sort() if cfg['metrics'] == 'loss' else ants.sort(reverse=True)
