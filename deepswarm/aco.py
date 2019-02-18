@@ -10,11 +10,11 @@ from .log import Log
 
 
 class ACO:
-    def __init__(self, max_depth, ants_number, backend, storage):
+    def __init__(self, max_depth, ant_count, backend, storage):
         self.graph = Graph()
         self.current_depth = 0
         self.max_depth = max_depth
-        self.ants_number = ants_number
+        self.ant_count = ant_count
         self.backend = backend
         self.greediness = 0.5
         self.storage = storage
@@ -29,7 +29,7 @@ class ACO:
         # Generate random ant only if search started from zero
         if not self.storage.loaded_from_save:
             Log.header("STARTING ACO SEARCH", type="GREEN")
-            Log.info("Max depth: %s\t Ant count: %s" % (self.max_depth, self.ants_number))
+            Log.info("Max depth: %s\t Ant count: %s" % (self.max_depth, self.ant_count))
             self.best_ant = Ant(self.graph.generate_path(self.random_select))
             self.best_ant.evaluate(self.backend, self.storage)
             Log.info(self.best_ant)
@@ -58,7 +58,7 @@ class ACO:
 
     def generate_ants(self):
         ants = []
-        for ant_number in range(self.ants_number):
+        for ant_number in range(self.ant_count):
             Log.header("GENERATING ANT %i" % (ant_number + 1))
             ant = Ant()
             # Generate ant's path using given ACO rule

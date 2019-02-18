@@ -28,7 +28,7 @@ class DeepSwarm:
         if not self.storage.loaded_from_save:
             self.aco = ACO(
                 max_depth=max_depth,
-                ants_number=swarm_size,
+                ant_count=swarm_size,
                 backend=self.backend,
                 storage=self.storage,
             )
