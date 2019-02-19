@@ -5,15 +5,23 @@ from .aco import ACO
 from .log import Log
 from .storage import Storage
 
+from . import settings
+
 
 class DeepSwarm:
     def __init__(self, backend):
         self.backend = backend
         self.storage = Storage(self)
-        Log.enable(self.storage)
+        # Enable logging and log current settings
+        self.setup_logging()
         # Try to load from backup
         if self.storage.loaded_from_save:
             self.__dict__ = self.storage.backup.__dict__
+
+    def setup_logging(self):
+        Log.enable(self.storage)
+        Log.header("DeepSwarm settings")
+        Log.info(settings)
 
     def find_topology(self):
         """Finds neural network topology which has lowest loss
