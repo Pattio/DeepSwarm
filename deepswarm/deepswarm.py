@@ -15,7 +15,7 @@ class DeepSwarm:
         if self.storage.loaded_from_save:
             self.__dict__ = self.storage.backup.__dict__
 
-    def find_topology(self, max_depth, swarm_size):
+    def find_topology(self):
         """Finds neural network topology which has lowest loss
 
         Args:
@@ -26,11 +26,7 @@ class DeepSwarm:
         """
         # Create new object only if there are no backups
         if not self.storage.loaded_from_save:
-            self.aco = ACO(
-                max_depth=max_depth,
-                ant_count=swarm_size,
-                backend=self.backend,
-                storage=self.storage,
-            )
+            self.aco = ACO(backend=self.backend, storage=self.storage)
+
         best_ant = self.aco.search()
         return best_ant

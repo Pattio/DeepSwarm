@@ -10,7 +10,7 @@ from . import cfg, nodes
 class NodeAttribute:
     def __init__(self, name, options):
         self.name = name
-        self.dict = {option: cfg['pheromone']['start'] for option in options}
+        self.dict = {option: cfg['aco']['pheromone']['start'] for option in options}
 
 
 class NeighbourNode:

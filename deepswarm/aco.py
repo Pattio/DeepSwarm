@@ -10,13 +10,10 @@ from .log import Log
 
 
 class ACO:
-    def __init__(self, max_depth, ant_count, backend, storage):
+    def __init__(self, backend, storage):
         self.graph = Graph()
         self.current_depth = 0
-        self.max_depth = max_depth
-        self.ant_count = ant_count
         self.backend = backend
-        self.greediness = 0.5
         self.storage = storage
 
     def search(self):
@@ -29,14 +26,13 @@ class ACO:
         # Generate random ant only if search started from zero
         if not self.storage.loaded_from_save:
             Log.header("STARTING ACO SEARCH", type="GREEN")
-            Log.info("Max depth: %s\t Ant count: %s" % (self.max_depth, self.ant_count))
             self.best_ant = Ant(self.graph.generate_path(self.random_select))
             self.best_ant.evaluate(self.backend, self.storage)
             Log.info(self.best_ant)
         else:
             Log.header("RESUMING ACO SEARCH", type="GREEN")
 
-        while self.graph.current_depth <= self.max_depth:
+        while self.graph.current_depth <= cfg['max_depth']:
             Log.header("Current search depth is %i" % self.graph.current_depth, type="GREEN")
             ants = self.generate_ants()
             # Sort ants depending on user selected metric
@@ -59,7 +55,7 @@ class ACO:
 
     def generate_ants(self):
         ants = []
-        for ant_number in range(self.ant_count):
+        for ant_number in range(cfg['aco']['ant_count']):
             Log.header("GENERATING ANT %i" % (ant_number + 1))
             ant = Ant()
             # Generate ant's path using given ACO rule
@@ -100,7 +96,7 @@ class ACO:
             denominator += pheromone
         # Try to perform greedy select - exploitation
         random_variable = random.uniform(0, 1)
-        if random_variable <= self.greediness:
+        if random_variable <= cfg['aco']['greediness']:
             # do greedy select
             max_probability = max(probabilities)
             max_indices = [i for i, j in enumerate(probabilities) if j == max_probability]
@@ -145,12 +141,15 @@ class ACO:
             current_node = neighbour.node
 
     def local_update(self, old_value, cost):
-        return (1 - cfg['pheromone']['decay']) * old_value + (cfg['pheromone']['decay'] * cfg['pheromone']['start'])
+        decay = cfg['aco']['pheromone']['decay']
+        pheromone_0 = cfg['aco']['pheromone']['start']
+        return (1 - decay) * old_value + (decay * pheromone_0)
 
     def global_update(self, old_value, cost):
         # Calculate solution cost based on metrics
         added_pheromone = (1 / (cost * 10)) if cfg['metrics'] == 'loss' else cost
-        return (1 - cfg['pheromone']['evaporation']) * old_value + (cfg['pheromone']['evaporation'] * added_pheromone)
+        evaporation = cfg['aco']['pheromone']['evaporation']
+        return (1 - evaporation) * old_value + (evaporation * added_pheromone)
 
 
 class Ant:

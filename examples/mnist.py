@@ -31,4 +31,4 @@ backend = TFKerasBackend(
 )
 # Create DeepSwarm object responsible for optimization
 deepswarm = DeepSwarm(backend=backend)
-deepswarm.find_topology(max_depth=2, swarm_size=2)
+deepswarm.find_topology()
