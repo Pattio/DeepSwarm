@@ -90,28 +90,18 @@ class TFKerasBackend(BaseBackend):
 
         for idx, node in enumerate(path):
             if type(node) is Conv2DNode:
+                conv2d_parameters = {
+                    'filters': node.filter_number,
+                    'kernel_size': node.kernel_size,
+                    'padding': 'same',
+                    'data_format': data_format,
+                    'activation': tf.nn.relu,
+                }
                 # Set input shape only for first layer after input
                 if idx > 0 and type(path[idx - 1]) is InputNode:
-                    model.add(
-                        tf.keras.layers.Conv2D(
-                            filters=node.filter_number,
-                            kernel_size=node.kernel_size,
-                            padding='same',
-                            data_format=data_format,
-                            activation=tf.nn.relu,
-                            input_shape=self.input_shape,
-                        )
-                    )
-                else:
-                    model.add(
-                        tf.keras.layers.Conv2D(
-                            filters=node.filter_number,
-                            kernel_size=node.kernel_size,
-                            padding='same',
-                            data_format=data_format,
-                            activation=tf.nn.relu,
-                        )
-                    )
+                    conv2d_parameters['input_shape'] = self.input_shape
+
+                model.add(tf.keras.layers.Conv2D(**conv2d_parameters))
             elif type(node) is Pool2DNode:
                 # TODO: add support for average
                 model.add(
