@@ -79,6 +79,11 @@ class BaseBackend:
         """
         raise NotImplementedError()
 
+    def free_gpu(self):
+        """ Frees gpu memory
+        """
+        raise NotImplementedError()
+
 
 class TFKerasBackend(BaseBackend):
     def __init__(self, dataset, input_shape, output_size):
@@ -180,6 +185,7 @@ class TFKerasBackend(BaseBackend):
 
     def save_model(self, model, path):
         model.save(path)
+        self.free_gpu()
 
     def load_model(self, path):
         try:
@@ -187,3 +193,6 @@ class TFKerasBackend(BaseBackend):
             return model
         except:
             return None
+
+    def free_gpu(self):
+        K.clear_session()
