@@ -14,7 +14,7 @@ class NodeAttribute:
 
 
 class NeighbourNode:
-    def __init__(self, node, pheromone):
+    def __init__(self, node, pheromone=cfg['aco']['pheromone']['start']):
         self.node = node
         self.pheromone = pheromone
 
