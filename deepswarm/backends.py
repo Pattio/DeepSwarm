@@ -108,15 +108,18 @@ class TFKerasBackend(BaseBackend):
 
                 model.add(tf.keras.layers.Conv2D(**conv2d_parameters))
             elif type(node) is Pool2DNode:
-                # TODO: add support for average
-                model.add(
-                    tf.keras.layers.MaxPooling2D(
-                        pool_size=node.pool_size,
-                        strides=node.stride,
-                        padding='same',
-                        data_format=data_format,
-                    )
-                )
+                pool2d_parameters = {
+                    'pool_size': node.pool_size,
+                    'strides': node.stride,
+                    'padding': 'same',
+                    'data_format': data_format,
+
+                }
+                if node.type == 'max':
+                    model.add(tf.keras.layers.MaxPooling2D(**pool2d_parameters))
+                elif node.type == 'average':
+                    model.add(tf.keras.layers.AveragePooling2D(**pool2d_parameters))
+
             elif type(node) is FlattenNode:
                 model.add(
                     tf.keras.layers.Flatten()

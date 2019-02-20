@@ -40,7 +40,7 @@ Nodes:
         repetition_penalty: 0.5
     Pool2DNode:
         attributes:
-            type: [max]
+            type: [max, average]
             pool_size: [2]
             stride: [2, 3]
         transitions:
