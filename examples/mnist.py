@@ -24,11 +24,7 @@ normalized_dataset = Dataset(
     validation_split=0.1,
 )
 # Create backend responsible for training & validating
-backend = TFKerasBackend(
-    dataset=normalized_dataset,
-    input_shape=input_shape,
-    output_size=10
-)
+backend = TFKerasBackend(dataset=normalized_dataset)
 # Create DeepSwarm object responsible for optimization
 deepswarm = DeepSwarm(backend=backend)
 deepswarm.find_topology()

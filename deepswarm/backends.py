@@ -19,10 +19,8 @@ class Dataset:
 
 
 class BaseBackend:
-    def __init__(self, dataset, input_shape, output_size):
+    def __init__(self, dataset):
         self.dataset = dataset
-        self.input_shape = input_shape
-        self.output_size = output_size
 
     def generate_model(self, path):
         """Create and return a backend model representation.
@@ -86,63 +84,67 @@ class BaseBackend:
 
 
 class TFKerasBackend(BaseBackend):
-    def __init__(self, dataset, input_shape, output_size):
-        super().__init__(dataset, input_shape, output_size)
+    def __init__(self, dataset):
+        super().__init__(dataset)
+        self.data_format = K.image_data_format()
 
     def generate_model(self, path):
-        data_format = K.image_data_format()
-        model = tf.keras.models.Sequential()
+        # Create input layer
+        input_layer = self.create_layer(path[0])
+        layer = input_layer
+        # Convert each node to layer and then connect it to the previous layer
+        for node in path[1:]:
+            layer = self.create_layer(node)(layer)
+        # Return generated model
+        return tf.keras.Model(inputs=input_layer, outputs=layer)
 
-        for idx, node in enumerate(path):
-            if type(node) is Conv2DNode:
-                conv2d_parameters = {
-                    'filters': node.filter_number,
-                    'kernel_size': node.kernel_size,
-                    'padding': 'same',
-                    'data_format': data_format,
-                    'activation': tf.nn.relu,
-                }
-                # Set input shape only for first layer after input
-                if idx > 0 and type(path[idx - 1]) is InputNode:
-                    conv2d_parameters['input_shape'] = self.input_shape
+    def create_layer(self, node):
+        if type(node) is InputNode:
+            return tf.keras.Input(shape=node.shape)
 
-                model.add(tf.keras.layers.Conv2D(**conv2d_parameters))
-            elif type(node) is Pool2DNode:
-                pool2d_parameters = {
-                    'pool_size': node.pool_size,
-                    'strides': node.stride,
-                    'padding': 'same',
-                    'data_format': data_format,
+        if type(node) is Conv2DNode:
+            conv2d_parameters = {
+                'filters': node.filter_number,
+                'kernel_size': node.kernel_size,
+                'padding': 'same',
+                'data_format': self.data_format,
+                'activation': tf.nn.relu,
+            }
+            return tf.keras.layers.Conv2D(**conv2d_parameters)
 
-                }
-                if node.type == 'max':
-                    model.add(tf.keras.layers.MaxPooling2D(**pool2d_parameters))
-                elif node.type == 'average':
-                    model.add(tf.keras.layers.AveragePooling2D(**pool2d_parameters))
+        if type(node) is Pool2DNode:
+            pool2d_parameters = {
+                'pool_size': node.pool_size,
+                'strides': node.stride,
+                'padding': 'same',
+                'data_format': self.data_format,
+            }
+            if node.type == 'max':
+                return tf.keras.layers.MaxPooling2D(**pool2d_parameters)
+            elif node.type == 'average':
+                return tf.keras.layers.AveragePooling2D(**pool2d_parameters)
 
-            elif type(node) is FlattenNode:
-                model.add(
-                    tf.keras.layers.Flatten()
-                )
-            elif type(node) is DenseNode:
-                model.add(
-                    tf.keras.layers.Dense(
-                        units=node.output_size,
-                        activation=tf.nn.relu,
-                    )
-                )
-            elif type(node) is DropoutNode:
-                model.add(
-                    tf.keras.layers.Dropout(node.rate)
-                )
-            elif type(node) is EndNode:
-                model.add(
-                    tf.keras.layers.Dense(
-                        units=self.output_size,
-                        activation=tf.nn.softmax
-                    )
-                )
-        return model
+        if type(node) is FlattenNode:
+            return tf.keras.layers.Flatten()
+
+        if type(node) is DenseNode:
+            dense_parameters = {
+                'units': node.output_size,
+                'activation': tf.nn.relu,
+            }
+            return tf.keras.layers.Dense(**dense_parameters)
+
+        if type(node) is DropoutNode:
+            return tf.keras.layers.Dropout(node.rate)
+
+        if type(node) is EndNode:
+            end_parameters = {
+                'units': node.output_size,
+                'activation': tf.nn.softmax,
+            }
+            return tf.keras.layers.Dense(**end_parameters)
+
+        raise Exception('Not handled node type: %s' % str(node))
 
     def train_model(self, model):
         model.compile(

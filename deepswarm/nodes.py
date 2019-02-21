@@ -26,6 +26,8 @@ class Node:
         self.neighbours = []
         self.setup_attributes()
         self.setup_transitions()
+        # Initialize random attribute values
+        self.select_random_attributes()
 
     def setup_attributes(self):
         self.attributes = []

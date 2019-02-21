@@ -16,7 +16,8 @@ DeepSwarm:
 
 Nodes:
     InputNode:
-        attributes: {}
+        attributes: 
+            shape: [!!python/tuple [28, 28, 1]]
         # What are possible transitions and how likely they are to appear. Likeliness
         # is expressed in percentage i.e. 0.5 means that there is 50% chance to go from
         # node x to node y. In summary it's a basic heuristic value used in case there
@@ -67,7 +68,9 @@ Nodes:
             DenseNode: 0.3
         repetition_penalty: 0.5
     EndNode:
-        attributes: {}
+        attributes:
+            output_size: [10]
+            activation: [softmax]
         transitions: {}
         repetition_penalty: 1
 
