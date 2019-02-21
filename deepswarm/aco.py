@@ -1,7 +1,6 @@
 # Copyright (c) 2019 Edvinas Byla
 # Licensed under MIT License
 
-import hashlib
 import random
 import math
 from . import cfg, comparison_operator
@@ -176,20 +175,12 @@ class Ant:
             self.path_hash,
         )
 
-    def describe_path(self):
-        described_nodes = []
-        for node in self.path:
-            attributes = ', '.join([a.name + ":" + str(getattr(node, a.name)) for a in node.attributes])
-            described_nodes.append(node.name + "(" + attributes + ")")
-        path_description = ' -> '.join([described_node for described_node in described_nodes])
-        return path_description
-
     def evaluate(self, backend, storage):
-        # Update path description
-        self.path_description = self.describe_path()
-        self.path_hash = hashlib.sha3_256(self.path_description.encode('utf-8')).hexdigest()
+        # Extract path information
+        self.path_description, path_hashes = storage.hash_path(self.path)
+        self.path_hash = path_hashes[-1]
         # Check if model already exists if yes, then just re-use it
-        existing_model = storage.load_model(backend, self.path_hash)
+        existing_model = storage.load_model(backend, path_hashes)
         if existing_model is None:
             # Generate model
             new_model = backend.generate_model(self.path)
@@ -201,4 +192,4 @@ class Ant:
         # Evaluate model
         self.loss, self.accuracy = backend.evaluate_model(new_model)
         # Save model
-        storage.save_model(backend, new_model, self.path_hash)
+        storage.save_model(backend, new_model, path_hashes)

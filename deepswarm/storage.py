@@ -1,6 +1,7 @@
 # Copyright (c) 2019 Edvinas Byla
 # Licensed under MIT License
 
+import hashlib
 import os
 import pickle
 from datetime import datetime
@@ -14,12 +15,9 @@ class Storage:
         "OBJECT": "objects",
     }
 
-    ITEM = {
-        "BACKUP": "backup"
-    }
+    ITEM = {"BACKUP": "backup"}
 
     def __init__(self, deepswarm):
-        self.current_path = None
         self.loaded_from_save = False
         self.backup = None
         self.model_cache = {}
@@ -57,19 +55,39 @@ class Storage:
     def perform_backup(self):
         self.save_object(self.deepswarm, Storage.ITEM["BACKUP"])
 
-    def save_model(self, backend, model, model_name):
-        path = self.current_path / Storage.DIR["MODEL"] / model_name
-        backend.save_model(model, path)
-        # Add record to dictioanry, which indicates that model should be on disk
-        self.model_cache[model_name] = True
+    def save_model(self, backend, model, path_hashes):
+        # Last element describes whole path
+        model_hash = path_hashes[-1]
+        # Point each sub-path hash to main model hash
+        for path_hash in path_hashes:
+            self.model_cache[path_hash] = model_hash
+        # Save main model on disk
+        save_path = self.current_path / Storage.DIR["MODEL"] / model_hash
+        backend.save_model(model, save_path)
 
-    def load_model(self, backend, model_name):
-        # Check disk only if model was in dictionary cache
-        if model_name in self.model_cache:
-            path = self.current_path / Storage.DIR["MODEL"] / model_name
-            return backend.load_model(path)
-        else:
-            return None
+    def load_model(self, backend, path_hashes):
+        # Go trough all hashes backwards
+        for idx, path_hash in enumerate(path_hashes[::-1]):
+            # See if particular hash is associated with some model
+            model_hash = self.model_cache.get(path_hash)
+            if model_hash is not None:
+                path = self.current_path / Storage.DIR["MODEL"] / model_hash
+                model = backend.load_model(path)
+                # Now you need to take this model and index and create a new
+                # model i.e. call method on backend
+                print("found model which has similar base")
+                print(idx)
+                break
+        return None
+
+    def hash_path(self, path):
+        hashes = []
+        path_description = str(path[0])
+        for node in path[1:]:
+            path_description += ' -> %s' % (node)
+            current_hash = hashlib.sha3_256(path_description.encode('utf-8')).hexdigest()
+            hashes.append(current_hash)
+        return (path_description, hashes)
 
     def save_object(self, data, name):
         with open(self.current_path / Storage.DIR["OBJECT"] / name, 'wb') as f:

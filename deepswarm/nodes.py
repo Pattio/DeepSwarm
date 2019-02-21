@@ -55,6 +55,10 @@ class Node:
     def select_random_attributes(self):
         self.select_attributes(lambda dict: random.choice(list(dict.keys())))
 
+    def __str__(self):
+        attributes = ', '.join([a.name + ":" + str(getattr(self, a.name)) for a in self.attributes])
+        return self.name + "(" + attributes + ")"
+
     def __deepcopy__(self, memo):
         cls = self.__class__
         result = cls.__new__(cls)
