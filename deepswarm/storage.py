@@ -64,9 +64,9 @@ class Storage:
         for path_hash in path_hashes:
             # Check if there already exists model for this sub-path
             existing_model_hash = self.path_lookup.get(path_hash)
-            existing_cost = self.models.get(existing_model_hash)
+            model_info = self.models.get(existing_model_hash)
             # If old model is better then skip this sub-path
-            if existing_cost is not None and left_cost_is_better(existing_cost, cost):
+            if model_info is not None and left_cost_is_better(model_info[0], cost):
                 continue
             # Otherwise associated this sub-path with new model
             self.path_lookup[path_hash] = model_hash
@@ -75,7 +75,7 @@ class Storage:
         # Save model on disk only if it was associated with some sub-path
         if sub_path_associated:
             # Add entry to models dictionary
-            self.models[model_hash] = cost
+            self.models[model_hash] = (cost, 0)
             # Save to disk
             save_path = self.current_path / Storage.DIR["MODEL"] / model_hash
             backend.save_model(model, save_path)
@@ -85,7 +85,9 @@ class Storage:
         for idx, path_hash in enumerate(path_hashes[::-1]):
             # See if particular hash is associated with some model
             model_hash = self.path_lookup.get(path_hash)
-            if model_hash is not None:
+            model_info = self.models.get(model_hash)
+            # Don't reuse model if it haven't improved for longer than allowed in patience
+            if model_hash is not None and model_info[1] < cfg['reuse_patience']:
                 file_path = self.current_path / Storage.DIR["MODEL"] / model_hash
                 model = backend.load_model(file_path)
                 # If failed to load model, skip to next hash
@@ -95,8 +97,19 @@ class Storage:
                 # otherwise create a new model by reusing old model. Even though,
                 # backend.reuse_model function could be called to handle both
                 # cases, this approach saves some unnecessary computation
-                return model if idx == 0 else backend.reuse_model(model, path, idx)
-        return None
+                new_model = model if idx == 0 else backend.reuse_model(model, path, idx)
+                # We also return base model (model which was used as a base to
+                # create new model) hash. This hash information is used later to
+                # track if base model is improving over time or is it stuck
+                return (new_model, model_hash)
+        return (None, None)
+
+    def record_model_performance(self, path_hash, cost):
+        model_hash = self.path_lookup.get(path_hash)
+        old_cost, no_improvements = self.models.get(model_hash)
+        # If cost haven't changed at all, increment no improvement count
+        if old_cost is not None and old_cost == cost:
+            self.models[model_hash] = (old_cost, (no_improvements + 1))
 
     def hash_path(self, path):
         hashes = []

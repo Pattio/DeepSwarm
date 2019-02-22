@@ -2,6 +2,7 @@ DeepSwarm:
     save_folder:
     metrics: accuracy
     max_depth: 2
+    reuse_patience: 1
     aco:
         pheromone:
             start: 0.1

@@ -180,7 +180,7 @@ class Ant:
         self.path_description, path_hashes = storage.hash_path(self.path)
         self.path_hash = path_hashes[-1]
         # Check if model already exists if yes, then just re-use it
-        existing_model = storage.load_model(backend, path_hashes, self.path)
+        existing_model, existing_model_hash = storage.load_model(backend, path_hashes, self.path)
         if existing_model is None:
             # Generate model
             new_model = backend.generate_model(self.path)
@@ -191,5 +191,8 @@ class Ant:
         new_model = backend.train_model(new_model)
         # Evaluate model
         self.loss, self.accuracy = backend.evaluate_model(new_model)
+        # If new model was created from older model, record older model progress
+        if existing_model_hash is not None:
+            storage.record_model_performance(existing_model_hash, self.cost)
         # Save model
         storage.save_model(backend, new_model, path_hashes, self.cost)
