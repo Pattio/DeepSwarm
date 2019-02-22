@@ -3,7 +3,7 @@
 
 import random
 import math
-from . import cfg, comparison_operator
+from . import cfg, left_cost_is_better
 from .graph import Graph
 from .log import Log
 
@@ -37,7 +37,7 @@ class ACO:
             # Sort ants depending on user selected metric
             ants.sort() if cfg['metrics'] == 'loss' else ants.sort(reverse=True)
             # If any of the new solutions has lower cost than best solution, update best
-            if comparison_operator(ants[0].cost, self.best_ant.cost):
+            if left_cost_is_better(ants[0].cost, self.best_ant.cost):
                 self.best_ant = ants[0]
                 Log.header("NEW BEST ANT FOUND", type="GREEN")
 

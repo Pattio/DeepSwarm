@@ -13,4 +13,4 @@ with open(project_path / 'settings.yaml', 'r') as settings_file:
 
 cfg = settings["DeepSwarm"]
 nodes = settings["Nodes"]
-comparison_operator = operator.lt if cfg['metrics'] == 'loss' else operator.gt
+left_cost_is_better = operator.lt if cfg['metrics'] == 'loss' else operator.gt

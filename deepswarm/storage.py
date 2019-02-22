@@ -6,7 +6,7 @@ import os
 import pickle
 from datetime import datetime
 from pathlib import Path
-from . import cfg, comparison_operator
+from . import cfg, left_cost_is_better
 
 
 class Storage:
@@ -66,7 +66,7 @@ class Storage:
             existing_model_hash = self.path_lookup.get(path_hash)
             existing_cost = self.models.get(existing_model_hash)
             # If old model is better then skip this sub-path
-            if (existing_cost is not None) and (not comparison_operator(cost, existing_cost)):
+            if existing_cost is not None and left_cost_is_better(existing_cost, cost):
                 continue
             # Otherwise associated this sub-path with new model
             self.path_lookup[path_hash] = model_hash
