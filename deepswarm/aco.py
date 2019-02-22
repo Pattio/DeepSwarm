@@ -192,4 +192,4 @@ class Ant:
         # Evaluate model
         self.loss, self.accuracy = backend.evaluate_model(new_model)
         # Save model
-        storage.save_model(backend, new_model, path_hashes)
+        storage.save_model(backend, new_model, path_hashes, self.cost)

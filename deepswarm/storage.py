@@ -6,7 +6,7 @@ import os
 import pickle
 from datetime import datetime
 from pathlib import Path
-from . import cfg
+from . import cfg, comparison_operator
 
 
 class Storage:
@@ -20,7 +20,8 @@ class Storage:
     def __init__(self, deepswarm):
         self.loaded_from_save = False
         self.backup = None
-        self.model_cache = {}
+        self.path_lookup = {}
+        self.models = {}
         self.deepswarm = deepswarm
         self.setup_path()
         self.setup_directories()
@@ -55,33 +56,46 @@ class Storage:
     def perform_backup(self):
         self.save_object(self.deepswarm, Storage.ITEM["BACKUP"])
 
-    def save_model(self, backend, model, path_hashes):
+    def save_model(self, backend, model, path_hashes, cost):
+        sub_path_associated = False
         # Last element describes whole path
         model_hash = path_hashes[-1]
-        # Point each sub-path hash to main model hash
+        # For each sub-path find it's correpsonding entry in hash table
         for path_hash in path_hashes:
-            self.model_cache[path_hash] = model_hash
-        # Save main model on disk
-        save_path = self.current_path / Storage.DIR["MODEL"] / model_hash
-        backend.save_model(model, save_path)
+            # Check if there already exists model for this sub-path
+            existing_model_hash = self.path_lookup.get(path_hash)
+            existing_cost = self.models.get(existing_model_hash)
+            # If old model is better then skip this sub-path
+            if (existing_cost is not None) and (not comparison_operator(cost, existing_cost)):
+                continue
+            # Otherwise associated this sub-path with new model
+            self.path_lookup[path_hash] = model_hash
+            sub_path_associated = True
+
+        # Save model on disk only if it was associated with some sub-path
+        if sub_path_associated:
+            # Add entry to models dictionary
+            self.models[model_hash] = cost
+            # Save to disk
+            save_path = self.current_path / Storage.DIR["MODEL"] / model_hash
+            backend.save_model(model, save_path)
 
     def load_model(self, backend, path_hashes, path):
         # Go trough all hashes backwards
         for idx, path_hash in enumerate(path_hashes[::-1]):
             # See if particular hash is associated with some model
-            model_hash = self.model_cache.get(path_hash)
+            model_hash = self.path_lookup.get(path_hash)
             if model_hash is not None:
                 file_path = self.current_path / Storage.DIR["MODEL"] / model_hash
                 model = backend.load_model(file_path)
                 # If failed to load model, skip to next hash
                 if model is None:
                     continue
-                # If there is no difference between models, just return old model
-                if idx == 0:
-                    return model
-                # Otherwise reused old model to create a new one
-                else:
-                    return backend.reuse_model(model, path, idx)
+                # If there is no difference between models, just return old model,
+                # otherwise create a new model by reusing old model. Even though,
+                # backend.reuse_model function could be called to handle both
+                # cases, this approach saves some unnecessary computation
+                return model if idx == 0 else backend.reuse_model(model, path, idx)
         return None
 
     def hash_path(self, path):
