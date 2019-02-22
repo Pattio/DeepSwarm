@@ -1,6 +1,7 @@
 # Copyright (c) 2019 Edvinas Byla
 # Licensed under MIT License
 
+import time
 import tensorflow as tf
 from tensorflow.keras import backend as K
 from . import cfg
@@ -26,11 +27,26 @@ class BaseBackend:
         """Create and return a backend model representation.
 
         Args:
-            path (Node): list of nodes where each node represents single
+            path [Node]: list of nodes where each node represents single
             network layer, path starts with InputNode and ends with EndNode
         Returns:
             model which represents neural network structure in the implemented
             backend, this model can be evaluated using evaluate_model method
+
+        """
+        raise NotImplementedError()
+
+    def reuse_model(self, old_model, new_model_path, distance):
+        """Create new model, by reusing layers (and their weights) from old model.
+
+        Args:
+            old_model: old model which represents neural network structure
+            new_model_path [Node]: path representing new model
+            distance (int): distance which shows how many layers from old model need
+            to be removed in order to create a base for new model i.e. if old model is
+            NodeA->NodeB->NodeC->NodeD and new model is NodeA->NodeB->NodeC->NodeE, distance = 1
+        Returns:
+            model which represents neural network structure
 
         """
         raise NotImplementedError()
@@ -98,51 +114,70 @@ class TFKerasBackend(BaseBackend):
         # Return generated model
         return tf.keras.Model(inputs=input_layer, outputs=layer)
 
+    def reuse_model(self, old_model, new_model_path, distance):
+        # Find starting point of new model
+        starting_point = len(new_model_path) - distance
+        last_layer = old_model.layers[starting_point - 1].output
+        # Append layers from new model to the old model
+        for node in new_model_path[starting_point:]:
+            last_layer = self.create_layer(node)(last_layer)
+        # Return new model
+        return tf.keras.Model(inputs=old_model.inputs, outputs=last_layer)
+
     def create_layer(self, node):
+        # Workaround to prevent Keras from throwing an exception ("All layer names should be unique.")
+        # It happens when new layers are appended to an existing model, but Keras fails to increment
+        # repeating layer names i.e. conv_1 -> conv_2
+        parameters = {'name': str(time.time())}
+
         if type(node) is InputNode:
-            return tf.keras.Input(shape=node.shape)
+            parameters['shape'] = node.shape
+            return tf.keras.Input(**parameters)
 
         if type(node) is Conv2DNode:
-            conv2d_parameters = {
+            parameters.update({
                 'filters': node.filter_number,
                 'kernel_size': node.kernel_size,
                 'padding': 'same',
                 'data_format': self.data_format,
                 'activation': tf.nn.relu,
-            }
-            return tf.keras.layers.Conv2D(**conv2d_parameters)
+            })
+            return tf.keras.layers.Conv2D(**parameters)
 
         if type(node) is Pool2DNode:
-            pool2d_parameters = {
+            parameters.update({
                 'pool_size': node.pool_size,
                 'strides': node.stride,
                 'padding': 'same',
                 'data_format': self.data_format,
-            }
+            })
             if node.type == 'max':
-                return tf.keras.layers.MaxPooling2D(**pool2d_parameters)
+                return tf.keras.layers.MaxPooling2D(**parameters)
             elif node.type == 'average':
-                return tf.keras.layers.AveragePooling2D(**pool2d_parameters)
+                return tf.keras.layers.AveragePooling2D(**parameters)
 
         if type(node) is FlattenNode:
-            return tf.keras.layers.Flatten()
+            return tf.keras.layers.Flatten(**parameters)
 
         if type(node) is DenseNode:
-            dense_parameters = {
+            parameters.update({
                 'units': node.output_size,
                 'activation': tf.nn.relu,
-            }
-            return tf.keras.layers.Dense(**dense_parameters)
+            })
+            return tf.keras.layers.Dense(**parameters)
 
         if type(node) is DropoutNode:
-            return tf.keras.layers.Dropout(node.rate)
+            parameters.update({
+                'rate': node.rate,
+            })
+            return tf.keras.layers.Dropout(**parameters)
 
         if type(node) is EndNode:
-            end_parameters = {
+            parameters.update({
                 'units': node.output_size,
                 'activation': tf.nn.softmax,
-            }
-            return tf.keras.layers.Dense(**end_parameters)
+            })
+            return tf.keras.layers.Dense(**parameters)
 
         raise Exception('Not handled node type: %s' % str(node))
 

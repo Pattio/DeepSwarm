@@ -180,7 +180,7 @@ class Ant:
         self.path_description, path_hashes = storage.hash_path(self.path)
         self.path_hash = path_hashes[-1]
         # Check if model already exists if yes, then just re-use it
-        existing_model = storage.load_model(backend, path_hashes)
+        existing_model = storage.load_model(backend, path_hashes, self.path)
         if existing_model is None:
             # Generate model
             new_model = backend.generate_model(self.path)

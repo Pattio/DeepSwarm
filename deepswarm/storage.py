@@ -65,19 +65,23 @@ class Storage:
         save_path = self.current_path / Storage.DIR["MODEL"] / model_hash
         backend.save_model(model, save_path)
 
-    def load_model(self, backend, path_hashes):
+    def load_model(self, backend, path_hashes, path):
         # Go trough all hashes backwards
         for idx, path_hash in enumerate(path_hashes[::-1]):
             # See if particular hash is associated with some model
             model_hash = self.model_cache.get(path_hash)
             if model_hash is not None:
-                path = self.current_path / Storage.DIR["MODEL"] / model_hash
-                model = backend.load_model(path)
-                # Now you need to take this model and index and create a new
-                # model i.e. call method on backend
-                print("found model which has similar base")
-                print(idx)
-                break
+                file_path = self.current_path / Storage.DIR["MODEL"] / model_hash
+                model = backend.load_model(file_path)
+                # If failed to load model, skip to next hash
+                if model is None:
+                    continue
+                # If there is no difference between models, just return old model
+                if idx == 0:
+                    return model
+                # Otherwise reused old model to create a new one
+                else:
+                    return backend.reuse_model(model, path, idx)
         return None
 
     def hash_path(self, path):
