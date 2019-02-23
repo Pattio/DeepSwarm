@@ -140,7 +140,7 @@ class TFKerasBackend(BaseBackend):
                 'kernel_size': node.kernel_size,
                 'padding': 'same',
                 'data_format': self.data_format,
-                'activation': tf.nn.relu,
+                'activation': self.map_activation(node.activation),
             })
             return tf.keras.layers.Conv2D(**parameters)
 
@@ -165,7 +165,7 @@ class TFKerasBackend(BaseBackend):
         if type(node) is DenseNode:
             parameters.update({
                 'units': node.output_size,
-                'activation': tf.nn.relu,
+                'activation': self.map_activation(node.activation),
             })
             return tf.keras.layers.Dense(**parameters)
 
@@ -178,11 +178,24 @@ class TFKerasBackend(BaseBackend):
         if type(node) is EndNode:
             parameters.update({
                 'units': node.output_size,
-                'activation': tf.nn.softmax,
+                'activation': self.map_activation(node.activation),
             })
             return tf.keras.layers.Dense(**parameters)
 
         raise Exception('Not handled node type: %s' % str(node))
+
+    def map_activation(self, activation):
+        if activation == "ReLU":
+            return tf.keras.activations.relu
+        if activation == "ELU":
+            return tf.keras.activations.elu
+        if activation == "LeakyReLU":
+            return tf.nn.leaky_relu
+        if activation == "Sigmoid":
+            return tf.keras.activations.sigmoid
+        if activation == "Softmax":
+            return tf.keras.activations.softmax
+        raise Exception('Not handled activation: %s' % activation)
 
     def train_model(self, model):
         model.compile(
