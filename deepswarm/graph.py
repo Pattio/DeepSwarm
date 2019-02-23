@@ -2,8 +2,7 @@
 # Licensed under MIT License
 
 from .log import Log
-from .nodes import (Conv2DNode, DenseNode, DropoutNode, EndNode, FlattenNode,
-    InputNode, NeighbourNode, Pool2DNode)
+from .nodes import (BatchNormalizationNode, Conv2DNode, DenseNode, DropoutNode, EndNode, FlattenNode, InputNode, NeighbourNode, Pool2DNode)
 
 
 class Graph:
@@ -67,7 +66,7 @@ class Graph:
         # in the path, because during first few iteration these nodes will always be part
         # of the best path (as it's impossible to close path automatically when it's so short)
         # this would result in bias pheromone received by these nodes during later iterations
-        if type(path[-1]) in (Conv2DNode, Pool2DNode):
+        if type(path[-1]) in (BatchNormalizationNode, Conv2DNode, Pool2DNode):
             path.append(self.get_node(FlattenNode(), len(path)))
         if type(path[-1]) in (FlattenNode, DenseNode, DropoutNode):
             path.append(self.get_node(EndNode(), len(path)))

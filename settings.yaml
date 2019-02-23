@@ -39,6 +39,14 @@ Nodes:
             Conv2DNode: 0.3
             Pool2DNode: 0.4
             FlattenNode: 0.3
+            BatchNormalizationNode: 0.3
+        repetition_penalty: 0.5
+    BatchNormalizationNode:
+        attributes: {}
+        transitions:
+            Conv2DNode: 0.3
+            Pool2DNode: 0.4
+            FlattenNode: 0.4
         repetition_penalty: 0.5
     Pool2DNode:
         attributes:
@@ -48,6 +56,7 @@ Nodes:
         transitions:
             Conv2DNode: 0.3
             FlattenNode: 0.4
+            BatchNormalizationNode: 1
         repetition_penalty: 0.5
     FlattenNode:
         attributes: {}

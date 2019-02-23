@@ -5,7 +5,7 @@ import time
 import tensorflow as tf
 from tensorflow.keras import backend as K
 from . import cfg
-from .nodes import (Conv2DNode, DenseNode, DropoutNode, EndNode, FlattenNode, InputNode, Pool2DNode)
+from .nodes import (BatchNormalizationNode, Conv2DNode, DenseNode, DropoutNode, EndNode, FlattenNode, InputNode, Pool2DNode)
 
 
 class Dataset:
@@ -155,6 +155,9 @@ class TFKerasBackend(BaseBackend):
                 return tf.keras.layers.MaxPooling2D(**parameters)
             elif node.type == 'average':
                 return tf.keras.layers.AveragePooling2D(**parameters)
+
+        if type(node) is BatchNormalizationNode:
+            return tf.keras.layers.BatchNormalization(**parameters)
 
         if type(node) is FlattenNode:
             return tf.keras.layers.Flatten(**parameters)

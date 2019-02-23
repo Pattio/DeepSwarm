@@ -86,6 +86,11 @@ class Conv2DNode(Node):
         super().__init__("Conv2DNode")
 
 
+class BatchNormalizationNode(Node):
+    def __init__(self):
+        super().__init__("BatchNormalizationNode")
+
+
 class Pool2DNode(Node):
     def __init__(self):
         super().__init__("Pool2DNode")
