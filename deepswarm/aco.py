@@ -80,13 +80,12 @@ class ACO:
         return current_node
 
     def aco_select_rule(self, neighbours):
-        """Selects neighbour node based on ant colony system transition probability
+        """Selects neighbour node based on ant colony system transition rule
 
         Args:
-            current_node (Node): node from which next node should be selected
-            path_identifier(String): string which describes path to the current_node
+            neighbours [(Node, Int)]: list of node and pheromone value tuples
         Returns:
-            index of the neighbour which was selected
+            selected neighbour
         """
         probabilities = []
         denominator = 0.0
