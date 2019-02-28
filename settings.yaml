@@ -3,6 +3,7 @@ DeepSwarm:
     metrics: accuracy
     max_depth: 2
     reuse_patience: 1
+
     aco:
         pheromone:
             start: 0.1
@@ -10,6 +11,7 @@ DeepSwarm:
             evaporation: 0.1
         greediness: 0.5
         ant_count: 2
+
     backend:
         epochs: 1
         batch_size: 1000
@@ -19,68 +21,66 @@ Nodes:
     InputNode:
         attributes: 
             shape: [!!python/tuple [28, 28, 1]]
-        # What are possible transitions and how likely they are to appear. Likeliness
-        # is expressed in percentage i.e. 0.5 means that there is 50% chance to go from
-        # node x to node y. In summary it's a basic heuristic value used in case there
-        # are some prior knowledge about problem
         transitions:
-            Conv2DNode: 1
-        # How much decrease probability of repeating the same node again i.e. if it's
-        # set to 0.5, it means that probability for node x to go straight after node x
-        # decreases by 50%. This value is created to promote diversity and prevent
-        # repetitions like x->x->x->x.
+            Conv2DNode: 1.0
         repetition_penalty: 1
+
     Conv2DNode:
         attributes:
             filter_number: [16, 32, 64]
             kernel_size: [1, 3, 5]
             activation: [ELU, ReLU, LeakyReLU]
         transitions:
-            Conv2DNode: 0.3
-            Pool2DNode: 0.4
-            FlattenNode: 0.3
-            BatchNormalizationNode: 0.3
+            Conv2DNode: 1.0
+            Pool2DNode: 1.2
+            FlattenNode: 0.8
+            BatchNormalizationNode: 1
         repetition_penalty: 0.5
+
     BatchNormalizationNode:
         attributes: {}
         transitions:
-            Conv2DNode: 0.3
-            Pool2DNode: 0.4
-            FlattenNode: 0.4
+            Conv2DNode: 1.1
+            Pool2DNode: 1.0
+            FlattenNode: 1.0
         repetition_penalty: 0.5
+
     Pool2DNode:
         attributes:
             type: [max, average]
             pool_size: [2]
             stride: [2, 3]
         transitions:
-            Conv2DNode: 0.3
-            FlattenNode: 0.4
-            BatchNormalizationNode: 1
+            Conv2DNode: 1.1
+            FlattenNode: 1.0
+            BatchNormalizationNode: 1.0
         repetition_penalty: 0.5
+
     FlattenNode:
         attributes: {}
         transitions:
-            DenseNode: 0.3
+            DenseNode: 1.0
         repetition_penalty: 0.5
+
     DenseNode:
         attributes:
             output_size: [32, 64, 128, 256]
             activation: [ELU, ReLU, LeakyReLU, Sigmoid]
         transitions:
-            DenseNode: 0.3
-            DropoutNode: 0.7
+            DenseNode: 1.0
+            DropoutNode: 1.2
         repetition_penalty: 0.5
+
     DropoutNode:
         attributes:
             rate: [0.1, 0.3, 0.5]
         transitions:
-            DenseNode: 0.3
+            DenseNode: 1.0
         repetition_penalty: 0.5
+
     EndNode:
         attributes:
             output_size: [10]
             activation: [Softmax]
         transitions: {}
         repetition_penalty: 1
-

@@ -14,8 +14,9 @@ class NodeAttribute:
 
 
 class NeighbourNode:
-    def __init__(self, node, pheromone=cfg['aco']['pheromone']['start']):
+    def __init__(self, node, heuristic, pheromone=cfg['aco']['pheromone']['start']):
         self.node = node
+        self.heuristic = heuristic
         self.pheromone = pheromone
 
 
@@ -40,7 +41,8 @@ class Node:
         module = importlib.import_module('deepswarm.nodes')
         for transition_name in nodes[self.name]['transitions']:
             transition_class = getattr(module, transition_name)
-            self.available_transitions.append(transition_class)
+            heuristic_value = nodes[self.name]['transitions'][transition_name]
+            self.available_transitions.append((transition_class, heuristic_value))
 
     def select_attributes(self, custom_select):
         selected_attributes = {}
@@ -52,7 +54,13 @@ class Node:
             setattr(self, key, value)
 
     def select_custom_attributes(self, custom_select):
-        self.select_attributes(lambda dict: custom_select(list(dict.items()))[0])
+        # Define function which transforms attributes, before selecting them
+        def select_transformed_custom_attributes(attribute_dictionary):
+            # Convert to list of tuples containing (attribute_value, pheromone, heuristic)
+            values = [(value, pheromone, 1.0) for value, pheromone in attribute_dictionary.items()]
+            # Return value, which was selected using custom select
+            return custom_select(values)
+        self.select_attributes(select_transformed_custom_attributes)
 
     def select_random_attributes(self):
         self.select_attributes(lambda dict: random.choice(list(dict.keys())))

@@ -73,9 +73,11 @@ class ACO:
         return current_node
 
     def aco_select(self, neighbours):
-        # Transform List of NeighbourNode objects to tuples (Node, Pheromone)
-        tuple_neighbours = [(n.node, n.pheromone) for n in neighbours]
-        current_node = self.aco_select_rule(tuple_neighbours)[0]
+        # Transform list of NeighbourNode objects to list of tuples (Node, pheromone, heuristic)
+        tuple_neighbours = [(n.node, n.pheromone, n.heuristic) for n in neighbours]
+        # Select node using ant colony select rule
+        current_node = self.aco_select_rule(tuple_neighbours)
+        # Select custom attributes using ant colony select rule
         current_node.select_custom_attributes(self.aco_select_rule)
         return current_node
 
@@ -83,32 +85,37 @@ class ACO:
         """Selects neighbour node based on ant colony system transition rule
 
         Args:
-            neighbours [(Node, Int)]: list of node and pheromone value tuples
+            neighbours [(Object, float, float)]: list of tuples, where each tuple
+            containts object to be selected object's pheromone value and object's heuristic value
         Returns:
-            selected neighbour
+            selected object
         """
         probabilities = []
         denominator = 0.0
-        for (neighbour, pheromone) in neighbours:
-            probabilities.append(pheromone)
-            denominator += pheromone
-        # Try to perform greedy select - exploitation
+
+        for (_, pheromone, heuristic) in neighbours:
+            probability = pheromone * heuristic
+            probabilities.append(probability)
+            denominator += probability
+        # Try to perform greedy select: exploitation
         random_variable = random.uniform(0, 1)
         if random_variable <= cfg['aco']['greediness']:
-            # do greedy select
+            # Find max probability
             max_probability = max(probabilities)
+            # Gather indices of probabilities that are equal to max probability
             max_indices = [i for i, j in enumerate(probabilities) if j == max_probability]
+            # From those max indices select random index
             neighbour_index = random.choice(max_indices)
-            return neighbours[neighbour_index]
-        # Otherwise perform select using roulette wheel - exploration
+            return neighbours[neighbour_index][0]
+        # Otherwise perform select using roulette wheel: exploration
         probabilities = [x / denominator for x in probabilities]
         probability_sum = sum(probabilities)
         random_treshold = random.uniform(0, probability_sum)
         current_value = 0
-        for idx, probability in enumerate(probabilities):
+        for neighbour_index, probability in enumerate(probabilities):
             current_value += probability
             if current_value > random_treshold:
-                return neighbours[idx]
+                return neighbours[neighbour_index][0]
 
     def update_pheromone(self, ant, update_rule):
         current_node = self.graph.input_node
