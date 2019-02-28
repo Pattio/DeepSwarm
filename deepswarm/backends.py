@@ -195,7 +195,7 @@ class TFKerasBackend(BaseBackend):
             return tf.keras.activations.sigmoid
         if activation == "Softmax":
             return tf.keras.activations.softmax
-        raise Exception('Not handled activation: %s' % activation)
+        raise Exception('Not handled activation: %s' % str(activation))
 
     def train_model(self, model):
         model.compile(
