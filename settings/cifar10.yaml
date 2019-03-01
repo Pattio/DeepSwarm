@@ -16,12 +16,12 @@ DeepSwarm:
         epochs: 1
         batch_size: 64
         patience: 1
-        loss: sparse_categorical_crossentropy
+        loss: categorical_crossentropy
 
 Nodes:
     InputNode:
         attributes: 
-            shape: [!!python/tuple [28, 28, 1]]
+            shape: [!!python/tuple [32, 32, 3]]
         transitions:
             Conv2DNode: 1.0
         repetition_penalty: 1

@@ -200,7 +200,7 @@ class TFKerasBackend(BaseBackend):
     def train_model(self, model):
         model.compile(
             optimizer='adam',
-            loss='sparse_categorical_crossentropy',
+            loss=cfg['backend']['loss'],
             metrics=['accuracy']
         )
 
