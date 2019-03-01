@@ -59,8 +59,7 @@ class ACO:
             ant = Ant()
             # Generate ant's path using given ACO rule
             ant.path = self.graph.generate_path(self.aco_select)
-            # TODO: Check if path is unique if not then don't evaluate this ant
-            # and use stats from already evaluated ant
+            # Evaluate how good is new path
             ant.evaluate(self.backend, self.storage)
             ants.append(ant)
             Log.info(ant)
@@ -119,9 +118,9 @@ class ACO:
 
     def update_pheromone(self, ant, update_rule):
         current_node = self.graph.input_node
-        # Skip input node as it's connected to any previous node
+        # Skip input node as it's not connected to any previous node
         for node in ant.path[1:]:
-            # Use node from path to retrieve it's corresponding node in graph
+            # Use node from path to retrieve its corresponding node in graph
             neighbour = next((x for x in current_node.neighbours if type(x.node) is type(node)), None)
             # If path was closed using complete_path method, ignore rest of the path
             if neighbour is None:
