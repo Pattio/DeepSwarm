@@ -88,6 +88,5 @@ class Graph:
                         info.append("\t\t%s: %s" % (attribute.name, attribute.dict))
             if info:
                 Log.header("Layer %d" % (idx + 1))
-                for item in info:
-                    Log.info(item)
+                Log.info('\n'.join(info))
         Log.header("PHEROMONE END", type="RED")
