@@ -3,12 +3,23 @@
 
 import os
 import operator
+import sys
 import yaml
 from pathlib import Path
 
-
-project_path = Path(os.path.dirname(os.path.dirname(__file__)))
-with open(project_path / 'settings.yaml', 'r') as settings_file:
+# Get name of script which started execution
+script_name = os.path.basename(sys.argv[0])
+# Retrieve name without the extension
+filename = os.path.splitext(script_name)[0]
+# Locate settings directory
+settings_directory = Path(os.path.dirname(os.path.dirname(__file__))) / 'settings'
+# Create settings file path corresponding to the script name
+settings_file_path = Path(settings_directory, filename).with_suffix('.yaml')
+# If file doesn't exist fallback to default settings file
+if not settings_file_path.exists():
+    settings_file_path = Path(settings_directory, 'default').with_suffix('.yaml')
+# Read settings file
+with open(settings_file_path, 'r') as settings_file:
     settings = yaml.load(settings_file)
 
 cfg = settings["DeepSwarm"]

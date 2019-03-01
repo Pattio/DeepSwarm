@@ -14,7 +14,7 @@ DeepSwarm:
 
     backend:
         epochs: 1
-        batch_size: 1000
+        batch_size: 64
         patience: 1
 
 Nodes:
