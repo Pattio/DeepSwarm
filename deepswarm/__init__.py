@@ -21,7 +21,9 @@ if not settings_file_path.exists():
 # Read settings file
 with open(settings_file_path, 'r') as settings_file:
     settings = yaml.load(settings_file)
-
+# Add script name to settings, so it's added to the log
+settings['script_name'] = script_name
+# Create convenient variables
 cfg = settings["DeepSwarm"]
 nodes = settings["Nodes"]
 left_cost_is_better = operator.le if cfg['metrics'] == 'loss' else operator.ge
