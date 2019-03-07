@@ -5,7 +5,6 @@ import time
 import tensorflow as tf
 from tensorflow.keras import backend as K
 from . import cfg
-from .nodes import (BatchNormalizationNode, Conv2DNode, DenseNode, DropoutNode, EndNode, FlattenNode, InputNode, Pool2DNode)
 
 
 class Dataset:
@@ -130,13 +129,13 @@ class TFKerasBackend(BaseBackend):
         # repeating layer names i.e. conv_1 -> conv_2
         parameters = {'name': str(time.time())}
 
-        if type(node) is InputNode:
+        if node.type == 'Input':
             parameters['shape'] = node.shape
             return tf.keras.Input(**parameters)
 
-        if type(node) is Conv2DNode:
+        if node.type == 'Conv2D':
             parameters.update({
-                'filters': node.filter_number,
+                'filters': node.filter_count,
                 'kernel_size': node.kernel_size,
                 'padding': 'same',
                 'data_format': self.data_format,
@@ -144,38 +143,38 @@ class TFKerasBackend(BaseBackend):
             })
             return tf.keras.layers.Conv2D(**parameters)
 
-        if type(node) is Pool2DNode:
+        if node.type == 'Pool2D':
             parameters.update({
                 'pool_size': node.pool_size,
                 'strides': node.stride,
                 'padding': 'same',
                 'data_format': self.data_format,
             })
-            if node.type == 'max':
+            if node.pool_type == 'max':
                 return tf.keras.layers.MaxPooling2D(**parameters)
-            elif node.type == 'average':
+            elif node.pool_type == 'average':
                 return tf.keras.layers.AveragePooling2D(**parameters)
 
-        if type(node) is BatchNormalizationNode:
+        if node.type == 'BatchNormalization':
             return tf.keras.layers.BatchNormalization(**parameters)
 
-        if type(node) is FlattenNode:
+        if node.type == 'Flatten':
             return tf.keras.layers.Flatten(**parameters)
 
-        if type(node) is DenseNode:
+        if node.type == 'Dense':
             parameters.update({
                 'units': node.output_size,
                 'activation': self.map_activation(node.activation),
             })
             return tf.keras.layers.Dense(**parameters)
 
-        if type(node) is DropoutNode:
+        if node.type == 'Dropout':
             parameters.update({
                 'rate': node.rate,
             })
             return tf.keras.layers.Dropout(**parameters)
 
-        if type(node) is EndNode:
+        if node.type == 'Output':
             parameters.update({
                 'units': node.output_size,
                 'activation': self.map_activation(node.activation),

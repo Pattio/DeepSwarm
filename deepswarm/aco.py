@@ -5,7 +5,7 @@ import random
 import math
 from . import cfg, left_cost_is_better
 from .log import Log
-from .nodes import (BatchNormalizationNode, Conv2DNode, DenseNode, DropoutNode, EndNode, FlattenNode, InputNode, NeighbourNode, Pool2DNode)
+from .nodes import Node, NeighbourNode
 
 
 class ACO:
@@ -120,8 +120,8 @@ class ACO:
         current_node = self.graph.input_node
         # Skip input node as it's not connected to any previous node
         for node in ant.path[1:]:
-            # Use node from path to retrieve its corresponding node in graph
-            neighbour = next((x for x in current_node.neighbours if type(x.node) is type(node)), None)
+            # Use node from the path to retrieve its corresponding instace from the graph
+            neighbour = next((x for x in current_node.neighbours if x.node.type == node.type), None)
             # If path was closed using complete_path method, ignore rest of the path
             if neighbour is None:
                 break
@@ -207,7 +207,7 @@ class Graph:
     def __init__(self, current_depth=0):
         self.topology = []
         self.current_depth = current_depth
-        self.input_node = self.get_node(InputNode(), current_depth)
+        self.input_node = self.get_node(Node.create_using_type('Input'), current_depth)
         self.increase_depth()
 
     def get_node(self, node, depth):
@@ -248,26 +248,23 @@ class Graph:
         # Expand only if it haven't been expanded
         if node.is_expanded is False:
             available_transitions = node.available_transitions
-            for (transition_class, heuristic_value) in available_transitions:
-                neighbour_node = self.get_node(transition_class(), depth + 1)
+            for (transition_name, heuristic_value) in available_transitions:
+                neighbour_node = self.get_node(Node(transition_name), depth + 1)
                 node.neighbours.append(NeighbourNode(neighbour_node, heuristic_value))
             node.is_expanded = True
         # Return value indicating if node has neigbours after beign expanded
         return len(node.neighbours) > 0
 
     def complete_path(self, path):
-        # If path is already completed then return that path
-        if type(path[-1]) is EndNode:
-            return path
-        # Otherwise complete the path and then return completed path
-        # We intentionally don't add these eding nodes as neighbours to the last node
+        # If path is not completed, then complete it and return completed path
+        # We intentionally don't add these ending nodes as neighbours to the last node
         # in the path, because during first few iteration these nodes will always be part
         # of the best path (as it's impossible to close path automatically when it's so short)
         # this would result in bias pheromone received by these nodes during later iterations
-        if type(path[-1]) in (BatchNormalizationNode, Conv2DNode, Pool2DNode):
-            path.append(self.get_node(FlattenNode(), len(path)))
-        if type(path[-1]) in (FlattenNode, DenseNode, DropoutNode):
-            path.append(self.get_node(EndNode(), len(path)))
+        if path[-1].name in cfg['spatial_nodes']:
+            path.append(self.get_node(Node.create_using_type('Flatten'), len(path)))
+        if path[-1].name in cfg['flat_nodes']:
+            path.append(self.get_node(Node.create_using_type('Output'), len(path)))
         return path
 
     def show_pheromone(self):

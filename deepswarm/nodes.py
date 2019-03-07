@@ -2,7 +2,6 @@
 # Licensed under MIT License
 
 import copy
-import importlib
 import random
 from . import cfg, nodes
 
@@ -21,14 +20,30 @@ class NeighbourNode:
 
 
 class Node:
+
     def __init__(self, name):
         self.name = name
-        self.is_expanded = False
         self.neighbours = []
+        self.is_expanded = False
+        self.type = nodes[self.name]['type']
         self.setup_attributes()
         self.setup_transitions()
-        # Initialize random attribute values
         self.select_random_attributes()
+
+    @classmethod
+    def create_using_type(cls, type):
+        """Create node instance using given type.
+
+        Args:
+            type (str): type defined in .yaml file
+        Returns:
+            Node instance
+
+        """
+        for node in nodes:
+            if nodes[node]['type'] == type:
+                return cls(node)
+        raise Exception('Type does not exist: %s' % str(type))
 
     def setup_attributes(self):
         self.attributes = []
@@ -38,11 +53,9 @@ class Node:
 
     def setup_transitions(self):
         self.available_transitions = []
-        module = importlib.import_module('deepswarm.nodes')
         for transition_name in nodes[self.name]['transitions']:
-            transition_class = getattr(module, transition_name)
             heuristic_value = nodes[self.name]['transitions'][transition_name]
-            self.available_transitions.append((transition_class, heuristic_value))
+            self.available_transitions.append((transition_name, heuristic_value))
 
     def select_attributes(self, custom_select):
         selected_attributes = {}
@@ -82,43 +95,3 @@ class Node:
 
     def create_deepcopy(self):
         return copy.deepcopy(self)
-
-
-class InputNode(Node):
-    def __init__(self):
-        super().__init__("InputNode")
-
-
-class Conv2DNode(Node):
-    def __init__(self):
-        super().__init__("Conv2DNode")
-
-
-class BatchNormalizationNode(Node):
-    def __init__(self):
-        super().__init__("BatchNormalizationNode")
-
-
-class Pool2DNode(Node):
-    def __init__(self):
-        super().__init__("Pool2DNode")
-
-
-class FlattenNode(Node):
-    def __init__(self):
-        super().__init__("FlattenNode")
-
-
-class DenseNode(Node):
-    def __init__(self):
-        super().__init__("DenseNode")
-
-
-class DropoutNode(Node):
-    def __init__(self):
-        super().__init__("DropoutNode")
-
-
-class EndNode(Node):
-    def __init__(self):
-        super().__init__("EndNode")
