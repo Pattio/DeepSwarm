@@ -205,7 +205,8 @@ class TFKerasBackend(BaseBackend):
 
         early_stop_parameters = {
             'patience': cfg['backend']['patience'],
-            'verbose': 1
+            'verbose': 1,
+            'restore_best_weights': True,
         }
         # Set user defined metrics
         if cfg['metrics'] == 'loss':
