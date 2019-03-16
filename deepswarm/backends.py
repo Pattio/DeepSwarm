@@ -2,6 +2,8 @@
 # Licensed under MIT License
 
 import time
+from abc import ABC, abstractmethod
+
 import tensorflow as tf
 from tensorflow.keras import backend as K
 from . import cfg
@@ -18,10 +20,11 @@ class Dataset:
         self.validation_split = validation_split
 
 
-class BaseBackend:
+class BaseBackend(ABC):
     def __init__(self, dataset):
         self.dataset = dataset
 
+    @abstractmethod
     def generate_model(self, path):
         """Create and return a backend model representation.
 
@@ -33,8 +36,8 @@ class BaseBackend:
             backend, this model can be evaluated using evaluate_model method
 
         """
-        raise NotImplementedError()
 
+    @abstractmethod
     def reuse_model(self, old_model, new_model_path, distance):
         """Create new model, by reusing layers (and their weights) from old model.
 
@@ -48,8 +51,8 @@ class BaseBackend:
             model which represents neural network structure
 
         """
-        raise NotImplementedError()
 
+    @abstractmethod
     def train_model(self, model):
         """Train model which was created using generate_model method.
 
@@ -59,8 +62,8 @@ class BaseBackend:
             model
 
         """
-        raise NotImplementedError()
 
+    @abstractmethod
     def evaluate_model(self, model):
         """Evaluate model which was created using generate_model method.
 
@@ -70,8 +73,8 @@ class BaseBackend:
             loss & accuracy tuple
 
         """
-        raise NotImplementedError()
 
+    @abstractmethod
     def save_model(self, model, path):
         """Saves model on disk
 
@@ -79,8 +82,8 @@ class BaseBackend:
             model: model which represents neural network structure
             path: string which represents model location
         """
-        raise NotImplementedError()
 
+    @abstractmethod
     def load_model(self, path):
         """Load model from disk, in case of fail should return None
 
@@ -90,12 +93,11 @@ class BaseBackend:
             model: model which represents neural network structure, or in case
             fail None
         """
-        raise NotImplementedError()
 
+    @abstractmethod
     def free_gpu(self):
         """ Frees gpu memory
         """
-        raise NotImplementedError()
 
 
 class TFKerasBackend(BaseBackend):
