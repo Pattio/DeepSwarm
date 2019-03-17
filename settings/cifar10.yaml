@@ -13,7 +13,7 @@ DeepSwarm:
         ant_count: 20
 
     backend:
-        epochs: 20
+        epochs: 15
         batch_size: 64
         patience: 5
         loss: categorical_crossentropy
@@ -51,7 +51,7 @@ Nodes:
             Conv2DNode: 1.1
             Pool2DNode: 1.0
             FlattenNode: 1.0
-            BatchNormalizationNode: 1.0
+            BatchNormalizationNode: 1.1
 
     BatchNormalizationNode:
         type: BatchNormalization
