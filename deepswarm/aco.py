@@ -226,7 +226,7 @@ class Graph:
         """Generates path trough the graph, based on given rule
 
         Args:
-            select_rule ([Node]): function which receives list of neighbours
+            select_rule ([NeigbourNode]): function which receives list of neighbours
 
         Returns:
             path which contains Node objects
