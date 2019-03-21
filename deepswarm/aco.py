@@ -121,7 +121,7 @@ class ACO:
         # Skip input node as it's not connected to any previous node
         for node in ant.path[1:]:
             # Use node from the path to retrieve its corresponding instace from the graph
-            neighbour = next((x for x in current_node.neighbours if x.node.type == node.type), None)
+            neighbour = next((x for x in current_node.neighbours if x.node.name == node.name), None)
             # If path was closed using complete_path method, ignore rest of the path
             if neighbour is None:
                 break
