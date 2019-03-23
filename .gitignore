@@ -8,3 +8,6 @@ deepswarm-env/
 
 # Log files
 saves/
+
+# Temporary files
+temp-model
