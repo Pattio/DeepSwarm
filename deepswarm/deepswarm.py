@@ -37,4 +37,5 @@ class DeepSwarm:
             self.aco = ACO(backend=self.backend, storage=self.storage)
 
         best_ant = self.aco.search()
-        return best_ant
+        best_model = self.storage.load_specified_model(self.backend, best_ant.path_hash)
+        return best_model

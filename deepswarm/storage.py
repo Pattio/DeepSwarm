@@ -88,8 +88,7 @@ class Storage:
             model_info = self.models.get(model_hash)
             # Don't reuse model if it haven't improved for longer than allowed in patience
             if model_hash is not None and model_info[1] < cfg['reuse_patience']:
-                file_path = self.current_path / Storage.DIR["MODEL"] / model_hash
-                model = backend.load_model(file_path)
+                model = self.load_specified_model(backend, model_hash)
                 # If failed to load model, skip to next hash
                 if model is None:
                     continue
@@ -103,6 +102,11 @@ class Storage:
                 # track if base model is improving over time or is it stuck
                 return (new_model, model_hash)
         return (None, None)
+
+    def load_specified_model(self, backend, model_hash):
+        file_path = self.current_path / Storage.DIR["MODEL"] / model_hash
+        model = backend.load_model(file_path)
+        return model
 
     def record_model_performance(self, path_hash, cost):
         model_hash = self.path_lookup.get(path_hash)
