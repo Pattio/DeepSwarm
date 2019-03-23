@@ -21,8 +21,9 @@ class Dataset:
 
 
 class BaseBackend(ABC):
-    def __init__(self, dataset):
+    def __init__(self, dataset, optimizer=None):
         self.dataset = dataset
+        self.optimizer = optimizer
 
     @abstractmethod
     def generate_model(self, path):
@@ -101,8 +102,8 @@ class BaseBackend(ABC):
 
 
 class TFKerasBackend(BaseBackend):
-    def __init__(self, dataset):
-        super().__init__(dataset)
+    def __init__(self, dataset, optimizer=None):
+        super().__init__(dataset, optimizer)
         self.data_format = K.image_data_format()
 
     def generate_model(self, path):
@@ -199,11 +200,17 @@ class TFKerasBackend(BaseBackend):
         raise Exception('Not handled activation: %s' % str(activation))
 
     def train_model(self, model):
-        model.compile(
-            optimizer='adam',
-            loss=cfg['backend']['loss'],
-            metrics=['accuracy']
-        )
+        optimizer_parameters = {
+            'optimizer': 'adam',
+            'loss': cfg['backend']['loss'],
+            'metrics': ['accuracy'],
+        }
+
+        # If user specified custom optimizer, use it instead of the default one
+        if self.optimizer is not None:
+            optimizer_parameters['optimizer'] = self.optimizer
+
+        model.compile(**optimizer_parameters)
 
         early_stop_parameters = {
             'patience': cfg['backend']['patience'],
