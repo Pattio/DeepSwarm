@@ -263,7 +263,7 @@ class TFKerasBackend(BaseBackend):
         x_train, x_val, y_train, y_val = train_test_split(
             self.dataset.x_train,
             self.dataset.y_train,
-            test_size=0.1
+            test_size=self.dataset.validation_split,
         )
         # Create checkpoint path
         checkpoint_path = 'temp-model'
@@ -273,7 +273,6 @@ class TFKerasBackend(BaseBackend):
             width_shift_range=0.1,
             height_shift_range=0.1,
             horizontal_flip=True,
-            validation_split=0.1
         )
         datagen.fit(x_train)
 
