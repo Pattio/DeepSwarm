@@ -24,7 +24,7 @@ class DeepSwarm:
         Log.info(settings)
 
     def find_topology(self):
-        """Finds neural network topology which has lowest loss
+        """Finds the neural network topology which has the lowest loss
 
         Args:
             max_depth (int): maximum number of hidden layers
@@ -32,10 +32,30 @@ class DeepSwarm:
         Returns:
             network model in the format of backend which was used during initialization
         """
-        # Create new object only if there are no backups
+
+        # Create a new object only if there are no backups
         if not self.storage.loaded_from_save:
             self.aco = ACO(backend=self.backend, storage=self.storage)
 
         best_ant = self.aco.search()
         best_model = self.storage.load_specified_model(self.backend, best_ant.path_hash)
         return best_model
+
+    def train_topology(self, model, epochs, augment=True):
+        """Trains given neural network topology for specified number of epochs
+
+        Args:
+            epoch (int): for how many epoch train the model
+            augment(bool): should algorithm perform data augmentation
+        Returns:
+            network model in the format of backend which was used during initialization
+        """
+        model_name = 'best-trained-topology'
+        trained_topology = self.backend.fully_train_model(model, epochs, augment)
+        self.storage.save_specified_model(self.backend, model_name, trained_topology)
+        return self.storage.load_specified_model(self.backend, model_name)
+
+    def evaluate_topology(self, model):
+        Log.header('EVALUATING PERFORMANCE ON TEST SET')
+        loss, accuracy = self.backend.evaluate_model(model)
+        Log.info('Accuracy is %f and loss is %f' % (accuracy, loss))

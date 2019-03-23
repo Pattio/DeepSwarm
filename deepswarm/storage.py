@@ -77,8 +77,7 @@ class Storage:
             # Add entry to models dictionary
             self.models[model_hash] = (cost, 0)
             # Save to disk
-            save_path = self.current_path / Storage.DIR["MODEL"] / model_hash
-            backend.save_model(model, save_path)
+            self.save_specified_model(backend, model_hash, model)
 
     def load_model(self, backend, path_hashes, path):
         # Go trough all hashes backwards
@@ -103,10 +102,14 @@ class Storage:
                 return (new_model, model_hash)
         return (None, None)
 
-    def load_specified_model(self, backend, model_hash):
-        file_path = self.current_path / Storage.DIR["MODEL"] / model_hash
+    def load_specified_model(self, backend, model_name):
+        file_path = self.current_path / Storage.DIR["MODEL"] / model_name
         model = backend.load_model(file_path)
         return model
+
+    def save_specified_model(self, backend, model_name, model):
+        save_path = self.current_path / Storage.DIR["MODEL"] / model_name
+        backend.save_model(model, save_path)
 
     def record_model_performance(self, path_hash, cost):
         model_hash = self.path_lookup.get(path_hash)

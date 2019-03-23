@@ -1,11 +1,13 @@
 # Copyright (c) 2019 Edvinas Byla
 # Licensed under MIT License
 
+import os
 import time
 from abc import ABC, abstractmethod
 
 import tensorflow as tf
 from tensorflow.keras import backend as K
+from sklearn.model_selection import train_test_split
 from . import cfg
 
 
@@ -60,7 +62,22 @@ class BaseBackend(ABC):
         Args:
             model: model which represents neural network structure
         Returns:
-            model
+            model which represents neural network structure
+
+        """
+
+    @abstractmethod
+    def fully_train_model(self, model, epochs, augment):
+        """Fully trains the model without early stopping. At the end of
+        the training, model with the best performing weights on validation set
+        is returned
+
+        Args:
+            model: model which represents neural network structure
+            epochs: for how many epoch train the model
+            augment: where to augment the training data
+        Returns:
+            model which represents neural network structure
 
         """
 
@@ -114,7 +131,9 @@ class TFKerasBackend(BaseBackend):
         for node in path[1:]:
             layer = self.create_layer(node)(layer)
         # Return generated model
-        return tf.keras.Model(inputs=input_layer, outputs=layer)
+        model = tf.keras.Model(inputs=input_layer, outputs=layer)
+        self.compile_model(model)
+        return model
 
     def reuse_model(self, old_model, new_model_path, distance):
         # Find starting point of new model
@@ -124,7 +143,21 @@ class TFKerasBackend(BaseBackend):
         for node in new_model_path[starting_point:]:
             last_layer = self.create_layer(node)(last_layer)
         # Return new model
-        return tf.keras.Model(inputs=old_model.inputs, outputs=last_layer)
+        model = tf.keras.Model(inputs=old_model.inputs, outputs=last_layer)
+        self.compile_model(model)
+        return model
+
+    def compile_model(self, model):
+        optimizer_parameters = {
+            'optimizer': 'adam',
+            'loss': cfg['backend']['loss'],
+            'metrics': ['accuracy'],
+        }
+
+        # If user specified custom optimizer, use it instead of the default one
+        if self.optimizer is not None:
+            optimizer_parameters['optimizer'] = self.optimizer
+        model.compile(**optimizer_parameters)
 
     def create_layer(self, node):
         # Workaround to prevent Keras from throwing an exception ("All layer names should be unique.")
@@ -200,49 +233,83 @@ class TFKerasBackend(BaseBackend):
         raise Exception('Not handled activation: %s' % str(activation))
 
     def train_model(self, model):
-        optimizer_parameters = {
-            'optimizer': 'adam',
-            'loss': cfg['backend']['loss'],
-            'metrics': ['accuracy'],
-        }
-
-        # If user specified custom optimizer, use it instead of the default one
-        if self.optimizer is not None:
-            optimizer_parameters['optimizer'] = self.optimizer
-
-        model.compile(**optimizer_parameters)
-
-        early_stop_parameters = {
-            'patience': cfg['backend']['patience'],
-            'verbose': 1,
-            'restore_best_weights': True,
-        }
-        # Set user defined metrics
-        if cfg['metrics'] == 'loss':
-            early_stop_parameters['monitor'] = 'val_loss'
-        else:
-            early_stop_parameters['monitor'] = 'val_acc'
-
-        early_stop_callback = tf.keras.callbacks.EarlyStopping(**early_stop_parameters)
-
+        # Create checkpoint path
+        checkpoint_path = 'temp-model'
         # Setup training parameters
         fit_parameters = {
             'x': self.dataset.x_train,
             'y': self.dataset.y_train,
             'epochs': cfg['backend']['epochs'],
             'batch_size': cfg['backend']['batch_size'],
-            'callbacks': [early_stop_callback],
+            'callbacks': [
+                self.create_early_stop_callback(),
+                self.create_checkpoint_callback(checkpoint_path),
+            ],
+            'validation_split': self.dataset.validation_split,
         }
-
-        # If no validation data was provided use validation split
-        if self.dataset.validation_data is None:
-            fit_parameters['validation_split'] = self.dataset.validation_split
-        # Othwerwise use provided validation data
-        else:
+        # If validation data is given then override validation_split
+        if self.dataset.validation_data is not None:
             fit_parameters['validation_data'] = self.dataset.validation_data
         # Train and return model
         model.fit(**fit_parameters)
-        return model
+        # Load model from checkpoint
+        checkpoint_model = self.load_model(checkpoint_path)
+        # Delete checkpoint
+        os.remove(checkpoint_path)
+        # Return checkpoint model if it exists
+        return checkpoint_model if checkpoint_model is not None else model
+
+    def fully_train_model(self, model, epochs, augment):
+        x_train, x_val, y_train, y_val = train_test_split(
+            self.dataset.x_train,
+            self.dataset.y_train,
+            test_size=0.1
+        )
+        # Create checkpoint path
+        checkpoint_path = 'temp-model'
+        # Create data generator
+        datagen = tf.keras.preprocessing.image.ImageDataGenerator(
+            rotation_range=15,
+            width_shift_range=0.1,
+            height_shift_range=0.1,
+            horizontal_flip=True,
+            validation_split=0.1
+        )
+        datagen.fit(x_train)
+
+        model.fit_generator(
+            generator=datagen.flow(x_train, y_train, batch_size=64),
+            steps_per_epoch=len(self.dataset.x_train) / 64,
+            epochs=epochs,
+            callbacks=[self.create_checkpoint_callback(checkpoint_path)],
+            validation_data=(x_val, y_val)
+        )
+        # Load model from checkpoint
+        checkpoint_model = self.load_model(checkpoint_path)
+        # Delete checkpoint
+        os.remove(checkpoint_path)
+        # Return checkpoint model if it exists
+        return checkpoint_model if checkpoint_model is not None else model
+
+    def create_early_stop_callback(self):
+        early_stop_parameters = {
+            'patience': cfg['backend']['patience'],
+            'verbose': 1,
+            'restore_best_weights': True,
+        }
+        # Set user defined metrics
+        early_stop_parameters['monitor'] = 'val_loss' if cfg['metrics'] == 'loss' else 'val_acc'
+        return tf.keras.callbacks.EarlyStopping(**early_stop_parameters)
+
+    def create_checkpoint_callback(self, checkpoint_path):
+        checkpoint_parameters = {
+            'filepath': checkpoint_path,
+            'verbose': 1,
+            'save_best_only': True,
+        }
+        # Set user defined metrics
+        checkpoint_parameters['monitor'] = 'val_loss' if cfg['metrics'] == 'loss' else 'val_acc'
+        return tf.keras.callbacks.ModelCheckpoint(**checkpoint_parameters)
 
     def evaluate_model(self, model):
         loss, accuracy = model.evaluate(self.dataset.x_test, self.dataset.y_test)
