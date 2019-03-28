@@ -9,6 +9,7 @@ DeepSwarm:
             start: 0.1
             decay: 0.1
             evaporation: 0.1
+            verbose: False
         greediness: 0.5
         ant_count: 20
 
@@ -17,6 +18,7 @@ DeepSwarm:
         batch_size: 64
         patience: 5
         loss: categorical_crossentropy
+        verbose: False
 
     spatial_nodes: [InputNode, Conv2DNode, DropoutSpatialNode, BatchNormalizationNode, Pool2DNode]
     flat_nodes: [FlattenNode, DenseNode, DropoutFlatNode, BatchNormalizationFlatNode]

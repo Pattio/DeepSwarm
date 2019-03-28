@@ -268,6 +268,10 @@ class Graph:
         return path
 
     def show_pheromone(self):
+        # If output is disabled by the user then don't log the pheromone
+        if cfg['aco']['pheromone']['verbose'] is False:
+            return
+
         Log.header("PHEROMONE START", type="RED")
         for idx, layer in enumerate(self.topology):
             info = []

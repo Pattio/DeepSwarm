@@ -246,6 +246,7 @@ class TFKerasBackend(BaseBackend):
                 self.create_checkpoint_callback(checkpoint_path),
             ],
             'validation_split': self.dataset.validation_split,
+            'verbose': cfg['backend']['verbose'],
         }
         # If validation data is given then override validation_split
         if self.dataset.validation_data is not None:
@@ -281,7 +282,8 @@ class TFKerasBackend(BaseBackend):
             steps_per_epoch=len(self.dataset.x_train) / 64,
             epochs=epochs,
             callbacks=[self.create_checkpoint_callback(checkpoint_path)],
-            validation_data=(x_val, y_val)
+            validation_data=(x_val, y_val),
+            verbose=cfg['backend']['verbose'],
         )
         # Load model from checkpoint
         checkpoint_model = self.load_model(checkpoint_path)
@@ -293,7 +295,7 @@ class TFKerasBackend(BaseBackend):
     def create_early_stop_callback(self):
         early_stop_parameters = {
             'patience': cfg['backend']['patience'],
-            'verbose': 1,
+            'verbose': cfg['backend']['verbose'],
             'restore_best_weights': True,
         }
         # Set user defined metrics
@@ -303,7 +305,7 @@ class TFKerasBackend(BaseBackend):
     def create_checkpoint_callback(self, checkpoint_path):
         checkpoint_parameters = {
             'filepath': checkpoint_path,
-            'verbose': 1,
+            'verbose': cfg['backend']['verbose'],
             'save_best_only': True,
         }
         # Set user defined metrics
@@ -311,7 +313,11 @@ class TFKerasBackend(BaseBackend):
         return tf.keras.callbacks.ModelCheckpoint(**checkpoint_parameters)
 
     def evaluate_model(self, model):
-        loss, accuracy = model.evaluate(self.dataset.x_test, self.dataset.y_test)
+        loss, accuracy = model.evaluate(
+            x=self.dataset.x_test,
+            y=self.dataset.y_test,
+            verbose=cfg['backend']['verbose']
+        )
         return (loss, accuracy)
 
     def save_model(self, model, path):
