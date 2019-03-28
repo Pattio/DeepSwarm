@@ -26,4 +26,11 @@ normalized_dataset = Dataset(
 backend = TFKerasBackend(dataset=normalized_dataset)
 # Create DeepSwarm object responsible for optimization
 deepswarm = DeepSwarm(backend=backend)
-deepswarm.find_topology()
+# Find the topology for a given dataset
+topology = deepswarm.find_topology()
+# Evaluate discovered topology
+deepswarm.evaluate_topology(topology)
+# Train topology for additional 40 epochs
+trained_topology = deepswarm.train_topology(topology, 40, augment=False)
+# Evaluate the final topology
+deepswarm.evaluate_topology(trained_topology)
