@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/9087174/54948416-7f0d9100-4f34-11e9-8ae4-5383e9a75c72.png" width="300">
+  <img src="https://user-images.githubusercontent.com/9087174/55276558-066c5300-52ed-11e9-8bb6-284948cdef67.png" width="300">
 </p>
 
 <p align="center">
@@ -17,9 +17,7 @@ DeepSwarm is an open-source library which uses Swarm Intelligence to tackle the 
 from deepswarm.backends import Dataset, TFKerasBackend
 from deepswarm.deepswarm import DeepSwarm
 
-dataset = Dataset(training_examples=x_train, training_labels=y_train, testing_examples=x_test, 
-    testing_labels=y_test, validation_split=0.1)
-
+dataset = Dataset(training_examples=x_train, training_labels=y_train, testing_examples=x_test, testing_labels=y_test)
 backend = TFKerasBackend(dataset=dataset)
 deepswarm = DeepSwarm(backend=backend)
 topology = deepswarm.find_topology()
