@@ -5,7 +5,7 @@ from .aco import ACO
 from .log import Log
 from .storage import Storage
 
-from . import settings
+from . import settings, left_cost_is_better
 
 
 class DeepSwarm:
@@ -14,7 +14,7 @@ class DeepSwarm:
         self.storage = Storage(self)
         # Enable logging and log current settings
         self.setup_logging()
-        # Try to load from backup
+        # Try to load from the backup
         if self.storage.loaded_from_save:
             self.__dict__ = self.storage.backup.__dict__
 
@@ -50,8 +50,30 @@ class DeepSwarm:
         Returns:
             network model in the format of backend which was used during initialization
         """
+
+        # Before training, make a copy of old weights in case performance
+        # degrades during the training
+        loss, accuracy = self.backend.evaluate_model(model)
+        old_weights = model.get_weights()
+
+        # Train the network
         model_name = 'best-trained-topology'
         trained_topology = self.backend.fully_train_model(model, epochs, augment)
+        loss_new, accuracy_new = self.backend.evaluate_model(trained_topology)
+
+        # Setup the metrics
+        if settings['DeepSwarm']['metrics'] == 'loss':
+            metrics_old = loss
+            metrics_new = loss_new
+        else:
+            metrics_old = accuracy
+            metrics_new = accuracy_new
+
+        # Restore the weights if performance did not improve
+        if left_cost_is_better(metrics_old, metrics_new):
+            trained_topology.set_weights(old_weights)
+
+        # Save and return the best topology
         self.storage.save_specified_model(self.backend, model_name, trained_topology)
         return self.storage.load_specified_model(self.backend, model_name)
 
