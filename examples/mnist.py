@@ -31,6 +31,6 @@ topology = deepswarm.find_topology()
 # Evaluate discovered topology
 deepswarm.evaluate_topology(topology)
 # Train topology for additional 30 epochs
-trained_topology = deepswarm.train_topology(topology, 30, augment=False)
+trained_topology = deepswarm.train_topology(topology, 30)
 # Evaluate the final topology
 deepswarm.evaluate_topology(trained_topology)

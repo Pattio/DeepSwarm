@@ -30,6 +30,11 @@ topology = deepswarm.find_topology()
 # Evaluate discovered topology
 deepswarm.evaluate_topology(topology)
 # Train topology on augmented data for additional 50 epochs
-trained_topology = deepswarm.train_topology(topology, 50)
+trained_topology = deepswarm.train_topology(topology, 50, augment={
+    'rotation_range': 15,
+    'width_shift_range': 0.1,
+    'height_shift_range': 0.1,
+    'horizontal_flip': True,
+})
 # Evaluate the final topology
 deepswarm.evaluate_topology(trained_topology)
