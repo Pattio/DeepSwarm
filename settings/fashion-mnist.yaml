@@ -1,7 +1,7 @@
 DeepSwarm:
     save_folder:
     metrics: accuracy
-    max_depth: 20
+    max_depth: 15
     reuse_patience: 1
 
     aco:
@@ -17,7 +17,7 @@ DeepSwarm:
         epochs: 20
         batch_size: 64
         patience: 5
-        loss: categorical_crossentropy
+        loss: sparse_categorical_crossentropy
         verbose: False
 
     spatial_nodes: [InputNode, Conv2DNode, DropoutSpatialNode, BatchNormalizationNode, Pool2DNode]
@@ -28,7 +28,7 @@ Nodes:
     InputNode:
         type: Input
         attributes: 
-            shape: [!!python/tuple [32, 32, 3]]
+            shape: [!!python/tuple [28, 28, 1]]
         transitions:
             Conv2DNode: 1.0
 
@@ -48,7 +48,7 @@ Nodes:
     DropoutSpatialNode:
         type: Dropout
         attributes:
-            rate: [0.1, 0.3, 0.5]
+            rate: [0.1, 0.3]
         transitions:
             Conv2DNode: 1.1
             Pool2DNode: 1.0
@@ -86,7 +86,7 @@ Nodes:
     DenseNode:
         type: Dense
         attributes:
-            output_size: [64, 128, 256]
+            output_size: [64, 128]
             activation: [ReLU, Sigmoid]
         transitions:
             DenseNode: 0.8
@@ -97,7 +97,7 @@ Nodes:
     DropoutFlatNode:
         type: Dropout
         attributes:
-            rate: [0.3, 0.5, 0.7]
+            rate: [0.1, 0.3]
         transitions:
             DenseNode: 1.0
             BatchNormalizationFlatNode: 1.0
