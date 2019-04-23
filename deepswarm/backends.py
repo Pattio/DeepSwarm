@@ -74,8 +74,8 @@ class BaseBackend(ABC):
 
         Args:
             model: model which represents neural network structure
-            epochs: for how many epoch train the model
-            augment: where to augment the training data
+            epoch (int): for how many epoch train the model
+            augment (kwargs): augmentation arguments
         Returns:
             model which represents neural network structure
 
@@ -260,31 +260,32 @@ class TFKerasBackend(BaseBackend):
         # Return checkpoint model if it exists
         return checkpoint_model if checkpoint_model is not None else model
 
-    def fully_train_model(self, model, epochs, augment):
-        x_train, x_val, y_train, y_val = train_test_split(
-            self.dataset.x_train,
-            self.dataset.y_train,
-            test_size=self.dataset.validation_split,
-        )
+    def fully_train_model(self, model, epochs, **augment):
+        # Setup validation data
+        if self.dataset.validation_data is not None:
+            x_val, y_val = self.dataset.validation_data
+            x_train, y_train = self.dataset.x_train, self.dataset.y_train
+        else:
+            x_train, x_val, y_train, y_val = train_test_split(
+                self.dataset.x_train,
+                self.dataset.y_train,
+                test_size=self.dataset.validation_split,
+            )
+
         # Create checkpoint path
         checkpoint_path = 'temp-model'
-        # Create data generator
-        datagen = tf.keras.preprocessing.image.ImageDataGenerator(
-            rotation_range=15,
-            width_shift_range=0.1,
-            height_shift_range=0.1,
-            horizontal_flip=True,
-        )
+        # Create and fit data generator
+        datagen = tf.keras.preprocessing.image.ImageDataGenerator(augment)
         datagen.fit(x_train)
-
         model.fit_generator(
-            generator=datagen.flow(x_train, y_train, batch_size=64),
-            steps_per_epoch=len(self.dataset.x_train) / 64,
+            generator=datagen.flow(x_train, y_train, batch_size=cfg['backend']['batch_size']),
+            steps_per_epoch=len(self.dataset.x_train) / cfg['backend']['batch_size'],
             epochs=epochs,
             callbacks=[self.create_checkpoint_callback(checkpoint_path)],
             validation_data=(x_val, y_val),
             verbose=cfg['backend']['verbose'],
         )
+
         # Load model from checkpoint
         checkpoint_model = self.load_model(checkpoint_path)
         # Delete checkpoint
