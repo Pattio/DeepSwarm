@@ -2,11 +2,9 @@
 # Licensed under MIT License
 
 import hashlib
-import os
 import pickle
 from datetime import datetime
-from pathlib import Path
-from . import cfg, left_cost_is_better
+from . import base_path, cfg, left_cost_is_better
 
 
 class Storage:
@@ -27,21 +25,21 @@ class Storage:
         self.setup_directories()
 
     def setup_path(self):
-        base_path = Path(os.path.dirname(os.path.dirname(__file__))) / "saves"
+        storage_path = base_path / 'saves'
         # If storage folder doesn't exist create one
-        if not base_path.exists():
-            base_path.mkdir()
+        if not storage_path.exists():
+            storage_path.mkdir()
         # Check if user specified save folder, which should be used to load data
         user_folder = cfg['save_folder']
-        if user_folder is not None and (base_path / user_folder).exists():
-            self.current_path = base_path / user_folder
+        if user_folder is not None and (storage_path / user_folder).exists():
+            self.current_path = storage_path / user_folder
             self.loaded_from_save = True
             # Store deepswarm object to backup
             self.backup = self.load_object(Storage.ITEM["BACKUP"])
             self.backup.storage.loaded_from_save = True
             return
         # Otherwise create new directory
-        directory_path = base_path / datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+        directory_path = storage_path / datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
         if not directory_path.exists():
             directory_path.mkdir()
             self.current_path = directory_path
