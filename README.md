@@ -9,7 +9,7 @@
 
 # DeepSwarm 
 
-DeepSwarm is an open-source library which uses Swarm Intelligence to tackle the neural architecture search problem. 
+DeepSwarm is an open-source library which uses Ant Colony Optimization to tackle the neural architecture search problem. The main goal of DeepSwarm is to automate one of the most tedious and daunting tasks, so people can spend more of their time on more important and interesting things in their life. DeepSwarm offers a powerful configuration system which allows you to fine-tune the search space to your needs.
 
 ## Example 
 
@@ -30,10 +30,12 @@ trained_topology = deepswarm.train_topology(topology, 50)
 ### Using pip
 
 1. Install the package
+
    ```sh
    pip install deepswarm
    ```
 2. Install one of the implemented backends that you want to use
+
    ```sh
    pip install tensorflow-gpu==1.13.1
    ```
@@ -46,21 +48,64 @@ trained_topology = deepswarm.train_topology(topology, 50)
    git clone https://github.com/Pattio/DeepSwarm.git
    ```
 2. Change the current directory to the repository directory
+
    ```sh
    cd deepswarm
    ```
 3. Create and activate virtual environment (optional)
+
    ```sh
    python3 -m venv deepswarm-env && source deepswarm-env/bin/activate
    ```
 4. Install the external dependencies 
+
    ```sh
    pip install -r requirements.txt
    ```
 5. Install one of the implemented backends that you want to use
+
    ```sh
    pip install tensorflow-gpu==1.13.1
    ```
+   
+## Usage
+
+#### pip installation:
+
+1. Create a new file containing the example code
+  
+   ```sh
+   touch train.py
+   ```
+2. Create settings directory which contains default.yaml file. Alternatively you can run the script and instantly stop it, as this should automatically create settings directory which contains default.yaml file.
+
+3. Update the newly created YAML file to your dataset needs. The only two important changes you must make are: (1) change the loss function to reflect your task (2) change the shape of input and output nodes.
+
+
+#### GitHub installation:
+
+1. Create a new file in the example directory (use example code as the base)
+
+   ```sh
+   touch examples/custom-dataset.py
+   ```
+2. Create a new YAML file which has the exact same name as the file you created in step 1. When creating this new YAML file, use default.yaml as its base 
+
+   ```sh
+   cp settings/default.yaml settings/custom-dataset.yaml
+   ```
+3. Update the newly created YAML file to your dataset needs. The only two important changes you must make are: (1) change the loss function to reflect your task (2) change the shape of input and output nodes.
+
+
+## Search 
+
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/9087174/56807132-d3eb4280-6825-11e9-94a5-50b0915899c8.png">
+</p>
+
+(1) The ant is placed on the input node (2) The ant checks what transitions are available (3) The ant uses the ACS selection rule to choose the next node (4) After choosing the next node the ant selects node’s attributes (5) After all ants finished their tour the pheromone is updated. (6) The maximum allowed depth is increased and the new ant population is generated. 
+
+<strong>Note</strong>: Arrow thickness indicates the pheromone amount, meaning that thicker arrows have more pheromone.
 
 
 ## Configuration 
