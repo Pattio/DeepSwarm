@@ -14,7 +14,7 @@ from shutil import copyfile
 parser = argparse.ArgumentParser()
 parser.add_argument('-s', '--script_name', default=os.path.basename(sys.argv[0]),
     help='Name which should be used to load the settings file, default value is the name of invoked script')
-args = parser.parse_args()
+args, _ = parser.parse_known_args()
 
 # Retrieve name without the extension
 script_name = args.script_name
