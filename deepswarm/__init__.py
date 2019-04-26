@@ -52,6 +52,7 @@ with open(settings_file_path, 'r') as settings_file:
 
 # Add script name to settings, so it's added to the log
 settings['script_name'] = script_name
+settings['settings_file'] = str(settings_file_path)
 
 # Create convenient variables
 cfg = settings["DeepSwarm"]
