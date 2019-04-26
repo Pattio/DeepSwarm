@@ -77,9 +77,9 @@ trained_topology = deepswarm.train_topology(topology, 50)
    ```sh
    touch train.py
    ```
-2. Create settings directory which contains default.yaml file. Alternatively you can run the script and instantly stop it, as this should automatically create settings directory which contains default.yaml file.
+2. Create settings directory which contains `default.yaml` file. Alternatively you can run the script and instantly stop it, as this should automatically create settings directory which contains `default.yaml` file
 
-3. Update the newly created YAML file to your dataset needs. The only two important changes you must make are: (1) change the loss function to reflect your task (2) change the shape of input and output nodes.
+3. Update the newly created YAML file to your dataset needs. The only two important changes you must make are: (1) change the loss function to reflect your task (2) change the shape of input and output nodes
 
 
 #### GitHub installation:
@@ -89,7 +89,7 @@ trained_topology = deepswarm.train_topology(topology, 50)
    ```sh
    touch examples/custom-dataset.py
    ```
-2. Create a new YAML file which has the exact same name as the file you created in step 1. When creating this new YAML file, use default.yaml as its base 
+2. Create a new YAML file which has the exact same name as the file you created in step 1. When creating this new YAML file, use `default.yaml` as its base 
 
    ```sh
    cp settings/default.yaml settings/custom-dataset.yaml
