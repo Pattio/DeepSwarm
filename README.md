@@ -85,11 +85,11 @@ trained_topology = deepswarm.train_topology(topology, 50)
 | start | Specifies the starting pheromone value for all the new connections. |
 | decay | Specifies the local pheromone decay rate in percentage. For example, if it is set to 0.1 it means that during the local pheromone update the pheromone value will be decreased by 10%. |
 | evaporation | Specifies the global pheromone evaporation rate in percentage. For example, if it is set to 0.1 it means that during the global pheromone update the pheromone value will be decreased by 10%. |
-| greediness | Specifies how greedy should ants be during the edge selection (number is given in percentage). For example, 0.5 means that 50% of the time when ant selects a new edge it should select the one with highest associated probability. |
+| greediness | Specifies how greedy should ants be during the edge selection (the number is given in percentage). For example, 0.5 means that 50% of the time when ant selects a new edge it should select the one with the highest associated probability. |
 | ant_count | Specifies how many ants should be generated during each generation (time before the depth is increased). |
 | epochs | Specifies for how many epochs each candidate architecture should be trained. |
 | batch_size | Specifies the batch size (number of samples used to calculate a single gradient step) used during the training process. |
-| patience | Specifies the early stopping number used during the training (after how many epochs when cost is not improving the training process should be stopped). |
+| patience | Specifies the early stopping number used during the training (after how many epochs when the cost is not improving the training process should be stopped). |
 | loss | Specifies what loss function should be used during the training. Currently available options are sparse_categorical_crossentropy and categorical_crossentropy. |
 | spatial_nodes | Specifies which nodes are placed before the flattening node. Values in this array must correspond to node names. |
 | flat_nodes | Specifies which nodes are placed after the flattening node (array should also include the flattening node). Values in this array must correspond to node names. |
