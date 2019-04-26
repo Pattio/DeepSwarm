@@ -12,13 +12,12 @@ from shutil import copyfile
 # Create argument parser which allows users to pass a custom script name
 # If user didn't pass a custom script name then use sys.argv[0]
 parser = argparse.ArgumentParser()
-parser.add_argument('-s', '--script_name', default=os.path.basename(sys.argv[0]),
-    help='Name which should be used to load the settings file, default value is the name of invoked script')
+parser.add_argument('-s', '--settings_file_name', default=os.path.basename(sys.argv[0]),
+    help='Settings file name. The default value is the name of invoked script without the .py extenstion')
 args, _ = parser.parse_known_args()
 
 # Retrieve name without the extension
-script_name = args.script_name
-filename = os.path.splitext(script_name)[0]
+filename = os.path.splitext(args.settings_file_name)[0]
 
 # If mnist yaml doesn't exist it means package was installed via pip in which
 # case we should use current working directory as the base path
@@ -51,7 +50,7 @@ with open(settings_file_path, 'r') as settings_file:
     settings = load(settings_file, Loader=Loader)
 
 # Add script name to settings, so it's added to the log
-settings['script_name'] = script_name
+settings['script'] = os.path.basename(sys.argv[0])
 settings['settings_file'] = str(settings_file_path)
 
 # Create convenient variables
