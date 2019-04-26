@@ -1,6 +1,7 @@
 # Copyright (c) 2019 Edvinas Byla
 # Licensed under MIT License
 
+import argparse
 import os
 import operator
 import sys
@@ -8,9 +9,15 @@ from yaml import load, Loader
 from pathlib import Path
 from shutil import copyfile
 
-# Get name of script which started execution
-script_name = os.path.basename(sys.argv[0])
+# Create argument parser which allows users to pass a custom script name
+# If user didn't pass a custom script name then use sys.argv[0]
+parser = argparse.ArgumentParser()
+parser.add_argument('-s', '--script_name', default=os.path.basename(sys.argv[0]),
+    help='Name which should be used to load the settings file, default value is the name of invoked script')
+args = parser.parse_args()
+
 # Retrieve name without the extension
+script_name = args.script_name
 filename = os.path.splitext(script_name)[0]
 
 # If mnist yaml doesn't exist it means package was installed via pip in which

@@ -5,9 +5,9 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="deepswarm",
-    version="0.0.1",
+    version="0.0.2",
     author="Edvinas Byla",
-    author_email="edvinasbyla@gmail.com.com",
+    author_email="edvinasbyla@gmail.com",
     description="Neural Architecture Search Powered by Swarm Intelligence",
     long_description=long_description,
     long_description_content_type="text/markdown",
