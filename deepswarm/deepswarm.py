@@ -41,7 +41,7 @@ class DeepSwarm:
         best_model = self.storage.load_specified_model(self.backend, best_ant.path_hash)
         return best_model
 
-    def train_topology(self, model, epochs, **augment):
+    def train_topology(self, model, epochs, augment):
         """Trains given neural network topology for specified number of epochs
 
         Args:
@@ -59,7 +59,7 @@ class DeepSwarm:
 
         # Train the network
         model_name = 'best-trained-topology'
-        trained_topology = self.backend.fully_train_model(model, epochs, **augment)
+        trained_topology = self.backend.fully_train_model(model, epochs, augment)
         loss_new, accuracy_new = self.backend.evaluate_model(trained_topology)
 
         # Setup the metrics

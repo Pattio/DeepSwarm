@@ -260,7 +260,7 @@ class TFKerasBackend(BaseBackend):
         # Return checkpoint model if it exists
         return checkpoint_model if checkpoint_model is not None else model
 
-    def fully_train_model(self, model, epochs, **augment):
+    def fully_train_model(self, model, epochs, augment):
         # Setup validation data
         if self.dataset.validation_data is not None:
             x_val, y_val = self.dataset.validation_data
@@ -275,7 +275,7 @@ class TFKerasBackend(BaseBackend):
         # Create checkpoint path
         checkpoint_path = 'temp-model'
         # Create and fit data generator
-        datagen = tf.keras.preprocessing.image.ImageDataGenerator(augment)
+        datagen = tf.keras.preprocessing.image.ImageDataGenerator(**augment)
         datagen.fit(x_train)
         model.fit_generator(
             generator=datagen.flow(x_train, y_train, batch_size=cfg['backend']['batch_size']),
