@@ -4,11 +4,14 @@
 import json
 import logging
 import re
+
 from colorama import init as colorama_init
 from colorama import Fore, Back, Style
 
 
 class Log:
+    """Class responsible for logging information."""
+
     # Define header styles
     HEADER_W = [Fore.BLACK, Back.WHITE, Style.BRIGHT]
     HEADER_R = [Fore.WHITE, Back.RED, Style.BRIGHT]
@@ -16,6 +19,12 @@ class Log:
 
     @classmethod
     def enable(cls, storage):
+        """Initializes the logger.
+
+        Args:
+            storage: Storage object.
+        """
+
         # Init colorama to enable colors
         colorama_init()
         # Get deepswarm logger
@@ -76,16 +85,20 @@ class Log:
 
     @classmethod
     def create_message(cls, message, options):
-        # Convert dictionary to nicely formated JSON
+        # Convert dictionary to nicely formatted JSON
         if isinstance(message, dict):
             message = json.dumps(message, indent=4, sort_keys=True)
-        # Convert all objects that are not strings to string
+
+        # Convert all objects that are not strings to strings
         if isinstance(message, str) is False:
             message = str(message)
+
         return ''.join(options) + message + '\033[0m'
 
 
 class FileFormatter(logging.Formatter):
+    """Class responsible for removing ANSI characters from the log file."""
+
     def plain(self, string):
         # Regex code adapted from Martijn Pieters https://stackoverflow.com/a/14693789
         ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]|[-]{2,}')

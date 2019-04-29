@@ -1,4 +1,5 @@
 import unittest
+
 from deepswarm.nodes import Node, NodeAttribute, NeighbourNode
 
 
@@ -14,7 +15,7 @@ class TestNodes(unittest.TestCase):
         self.assertFalse(self.input_node.is_expanded)
         self.assertNotEqual(self.input_node.attributes, [])
         self.assertNotEqual(self.input_node.available_transitions, [])
-        # Test if generated desctiption is correct
+        # Test if generated description is correct
         description = self.input_node.name + '(' + 'shape:' + str(self.input_node.shape) + ')'
         self.assertEqual(description, str(self.input_node))
 
@@ -24,7 +25,7 @@ class TestNodes(unittest.TestCase):
         self.assertEqual(input_node_new.type, self.input_node.type)
 
     def test_deepcopy(self):
-        # Test if copied object is instance of Node
+        # Test if the copied object is an instance of Node
         input_node_copy = self.input_node.create_deepcopy()
         self.assertIsInstance(input_node_copy, Node)
         # Test if unnecessary attributes were removed
@@ -40,10 +41,10 @@ class TestNodes(unittest.TestCase):
         available_transition_name = available_transition[0]
         available_transition_node = Node(available_transition_name)
         self.assertIsInstance(available_transition_node, Node)
-        # Check if node was properly initialized
+        # Check if the node was properly initialized
         self.assertNotEqual(available_transition_node.attributes, [])
         self.assertNotEqual(available_transition_node.available_transitions, [])
-        # Check if available transition contains heuristic value
+        # Check if available transition contains a heuristic value
         self.assertIsInstance(available_transition[1], float)
 
     def test_custom_attribute_selection(self):
@@ -88,5 +89,5 @@ class TestNodes(unittest.TestCase):
         pheromone_values = list(set(attribute.dict.values()))
         # Because NodeAttribute object was just initialized and no changes to
         # pheromone values were performed, all pheromone values must be the same
-        # meaning that pheromone_values must containt only 1 element
+        # meaning that pheromone_values must contain only 1 element
         self.assertEqual(len(pheromone_values), 1)

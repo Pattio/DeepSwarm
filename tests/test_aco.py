@@ -1,7 +1,8 @@
 import math
 import unittest
-from deepswarm.aco import ACO, Ant
+
 from deepswarm import cfg
+from deepswarm.aco import ACO, Ant
 
 
 class TestACO(unittest.TestCase):
@@ -10,7 +11,7 @@ class TestACO(unittest.TestCase):
         self.aco = ACO(None, None)
 
     def test_ant_init(self):
-        # Test if ant is initialized properly
+        # Test if the ant is initialized properly
         ant = Ant()
         self.assertEqual(ant.loss, math.inf)
         self.assertEqual(ant.accuracy, 0.0)
@@ -21,7 +22,7 @@ class TestACO(unittest.TestCase):
             self.assertEqual(ant.cost, ant.accuracy)
 
     def test_ant_init_with_path(self):
-        # Test if ant is initialized properly when path is given
+        # Test if the ant is initialized properly when a path is given
         self.aco.graph.increase_depth()
         path = self.aco.graph.generate_path(self.aco.aco_select)
         ant = Ant(path)

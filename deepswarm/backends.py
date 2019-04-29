@@ -2,16 +2,19 @@
 # Licensed under MIT License
 
 import os
-import time
-from abc import ABC, abstractmethod
-
 import tensorflow as tf
-from tensorflow.keras import backend as K
+import time
+
+from abc import ABC, abstractmethod
 from sklearn.model_selection import train_test_split
+from tensorflow.keras import backend as K
+
 from . import cfg
 
 
 class Dataset:
+    """Class responsible for encapsulating all the required data."""
+
     def __init__(self, training_examples, training_labels, testing_examples, testing_labels,
      validation_data=None, validation_split=0.1):
         self.x_train = training_examples
@@ -23,6 +26,8 @@ class Dataset:
 
 
 class BaseBackend(ABC):
+    """Abstract class used to define Backend API."""
+
     def __init__(self, dataset, optimizer=None):
         self.dataset = dataset
         self.optimizer = optimizer
@@ -32,27 +37,26 @@ class BaseBackend(ABC):
         """Create and return a backend model representation.
 
         Args:
-            path [Node]: list of nodes where each node represents single
-            network layer, path starts with InputNode and ends with EndNode
+            path [Node]: list of nodes where each node represents a single
+            network layer, the path starts with InputNode and ends with EndNode.
         Returns:
             model which represents neural network structure in the implemented
-            backend, this model can be evaluated using evaluate_model method
-
+            backend, this model can be evaluated using evaluate_model method.
         """
 
     @abstractmethod
     def reuse_model(self, old_model, new_model_path, distance):
-        """Create new model, by reusing layers (and their weights) from old model.
+        """Create a new model by reusing layers (and their weights) from the old model.
 
         Args:
-            old_model: old model which represents neural network structure
-            new_model_path [Node]: path representing new model
+            old_model: old model which represents neural network structure.
+            new_model_path [Node]: path representing new model.
             distance (int): distance which shows how many layers from old model need
             to be removed in order to create a base for new model i.e. if old model is
-            NodeA->NodeB->NodeC->NodeD and new model is NodeA->NodeB->NodeC->NodeE, distance = 1
+            NodeA->NodeB->NodeC->NodeD and new model is NodeA->NodeB->NodeC->NodeE,
+            distance = 1.
         Returns:
-            model which represents neural network structure
-
+            model which represents neural network structure.
         """
 
     @abstractmethod
@@ -60,25 +64,23 @@ class BaseBackend(ABC):
         """Train model which was created using generate_model method.
 
         Args:
-            model: model which represents neural network structure
+            model: model which represents neural network structure.
         Returns:
-            model which represents neural network structure
-
+            model which represents neural network structure.
         """
 
     @abstractmethod
     def fully_train_model(self, model, epochs, augment):
-        """Fully trains the model without early stopping. At the end of
-        the training, model with the best performing weights on validation set
-        is returned
+        """Fully trains the model without early stopping. At the end of the
+        training, the model with the best performing weights on the validation
+        set is returned.
 
         Args:
-            model: model which represents neural network structure
-            epoch (int): for how many epoch train the model
-            augment (kwargs): augmentation arguments
+            model: model which represents neural network structure.
+            epochs (int): for how many epoch train the model.
+            augment (kwargs): augmentation arguments.
         Returns:
-            model which represents neural network structure
-
+            model which represents neural network structure.
         """
 
     @abstractmethod
@@ -86,62 +88,66 @@ class BaseBackend(ABC):
         """Evaluate model which was created using generate_model method.
 
         Args:
-            model: model which represents neural network structure
+            model: model which represents neural network structure.
         Returns:
-            loss & accuracy tuple
-
+            loss & accuracy tuple.
         """
 
     @abstractmethod
     def save_model(self, model, path):
-        """Saves model on disk
+        """Saves model on disk.
 
         Args:
-            model: model which represents neural network structure
-            path: string which represents model location
+            model: model which represents neural network structure.
+            path: string which represents model location.
         """
 
     @abstractmethod
     def load_model(self, path):
-        """Load model from disk, in case of fail should return None
+        """Load model from disk, in case of fail should return None.
 
         Args:
-            path: string which represents model location
+            path: string which represents model location.
         Returns:
             model: model which represents neural network structure, or in case
-            fail None
+            fail None.
         """
 
     @abstractmethod
     def free_gpu(self):
-        """ Frees gpu memory
-        """
+        """Frees GPU memory."""
 
 
 class TFKerasBackend(BaseBackend):
+    """Backend based on TensorFlow Keras API"""
+
     def __init__(self, dataset, optimizer=None):
         super().__init__(dataset, optimizer)
         self.data_format = K.image_data_format()
 
     def generate_model(self, path):
-        # Create input layer
+        # Create an input layer
         input_layer = self.create_layer(path[0])
         layer = input_layer
+
         # Convert each node to layer and then connect it to the previous layer
         for node in path[1:]:
             layer = self.create_layer(node)(layer)
+
         # Return generated model
         model = tf.keras.Model(inputs=input_layer, outputs=layer)
         self.compile_model(model)
         return model
 
     def reuse_model(self, old_model, new_model_path, distance):
-        # Find starting point of new model
+        # Find the starting point of the new model
         starting_point = len(new_model_path) - distance
         last_layer = old_model.layers[starting_point - 1].output
-        # Append layers from new model to the old model
+
+        # Append layers from the new model to the old model
         for node in new_model_path[starting_point:]:
             last_layer = self.create_layer(node)(last_layer)
+
         # Return new model
         model = tf.keras.Model(inputs=old_model.inputs, outputs=last_layer)
         self.compile_model(model)
@@ -160,9 +166,10 @@ class TFKerasBackend(BaseBackend):
         model.compile(**optimizer_parameters)
 
     def create_layer(self, node):
-        # Workaround to prevent Keras from throwing an exception ("All layer names should be unique.")
-        # It happens when new layers are appended to an existing model, but Keras fails to increment
-        # repeating layer names i.e. conv_1 -> conv_2
+        # Workaround to prevent Keras from throwing an exception ("All layer
+        # names should be unique.") It happens when new layers are appended to
+        # an existing model, but Keras fails to increment repeating layer names
+        # i.e. conv_1 -> conv_2
         parameters = {'name': str(time.time())}
 
         if node.type == 'Input':
@@ -233,8 +240,9 @@ class TFKerasBackend(BaseBackend):
         raise Exception('Not handled activation: %s' % str(activation))
 
     def train_model(self, model):
-        # Create checkpoint path
+        # Create a checkpoint path
         checkpoint_path = 'temp-model'
+
         # Setup training parameters
         fit_parameters = {
             'x': self.dataset.x_train,
@@ -248,16 +256,19 @@ class TFKerasBackend(BaseBackend):
             'validation_split': self.dataset.validation_split,
             'verbose': cfg['backend']['verbose'],
         }
+
         # If validation data is given then override validation_split
         if self.dataset.validation_data is not None:
             fit_parameters['validation_data'] = self.dataset.validation_data
-        # Train and return model
+
+        # Train model
         model.fit(**fit_parameters)
+
         # Load model from checkpoint
         checkpoint_model = self.load_model(checkpoint_path)
         # Delete checkpoint
         os.remove(checkpoint_path)
-        # Return checkpoint model if it exists
+        # Return checkpoint model if it exists, otherwise return trained model
         return checkpoint_model if checkpoint_model is not None else model
 
     def fully_train_model(self, model, epochs, augment):
@@ -274,9 +285,12 @@ class TFKerasBackend(BaseBackend):
 
         # Create checkpoint path
         checkpoint_path = 'temp-model'
+
         # Create and fit data generator
         datagen = tf.keras.preprocessing.image.ImageDataGenerator(**augment)
         datagen.fit(x_train)
+
+        # Train model
         model.fit_generator(
             generator=datagen.flow(x_train, y_train, batch_size=cfg['backend']['batch_size']),
             steps_per_epoch=len(self.dataset.x_train) / cfg['backend']['batch_size'],
@@ -290,7 +304,7 @@ class TFKerasBackend(BaseBackend):
         checkpoint_model = self.load_model(checkpoint_path)
         # Delete checkpoint
         os.remove(checkpoint_path)
-        # Return checkpoint model if it exists
+        # Return checkpoint model if it exists, otherwise return trained model
         return checkpoint_model if checkpoint_model is not None else model
 
     def create_early_stop_callback(self):
@@ -299,7 +313,6 @@ class TFKerasBackend(BaseBackend):
             'verbose': cfg['backend']['verbose'],
             'restore_best_weights': True,
         }
-        # Set user defined metrics
         early_stop_parameters['monitor'] = 'val_loss' if cfg['metrics'] == 'loss' else 'val_acc'
         return tf.keras.callbacks.EarlyStopping(**early_stop_parameters)
 
@@ -309,7 +322,6 @@ class TFKerasBackend(BaseBackend):
             'verbose': cfg['backend']['verbose'],
             'save_best_only': True,
         }
-        # Set user defined metrics
         checkpoint_parameters['monitor'] = 'val_loss' if cfg['metrics'] == 'loss' else 'val_acc'
         return tf.keras.callbacks.ModelCheckpoint(**checkpoint_parameters)
 
