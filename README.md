@@ -138,6 +138,7 @@ trained_topology = deepswarm.train_topology(topology, 50)
 | loss | Specifies what loss function should be used during the training. Currently available options are sparse_categorical_crossentropy and categorical_crossentropy. |
 | spatial_nodes | Specifies which nodes are placed before the flattening node. Values in this array must correspond to node names. |
 | flat_nodes | Specifies which nodes are placed after the flattening node (array should also include the flattening node). Values in this array must correspond to node names. |
+| verbose|  Specifies if associated component should log the output.|
 
 
 ## Acknowledgments
