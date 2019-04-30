@@ -100,7 +100,7 @@ trained_topology = deepswarm.train_topology(topology, 50)
 ## Search 
 
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/9087174/56807132-d3eb4280-6825-11e9-94a5-50b0915899c8.png">
+  <img src="https://user-images.githubusercontent.com/9087174/56983672-21481680-6b7c-11e9-91b7-e41882ec81ee.png">
 </p>
 
 (1) The ant is placed on the input node (2) The ant checks what transitions are available (3) The ant uses the ACS selection rule to choose the next node (4) After choosing the next node the ant selects node’s attributes (5) After all ants finished their tour the pheromone is updated. (6) The maximum allowed depth is increased and the new ant population is generated. 
