@@ -3,15 +3,15 @@
 </p>
 
 <p align="center">
-  <strong>Neural Architecture Search Powered by Swarm Intelligence</strong>
+  <strong>Neural Architecture Search Powered by Swarm Intelligence 🐜</strong>
 </p>
 
 
-# DeepSwarm 
+# DeepSwarm
 
 DeepSwarm is an open-source library which uses Ant Colony Optimization to tackle the neural architecture search problem. The main goal of DeepSwarm is to automate one of the most tedious and daunting tasks, so people can spend more of their time on more important and interesting things. DeepSwarm offers a powerful configuration system which allows you to fine-tune the search space to your needs.
 
-## Example 
+## Example 🖼
 
 ```python
 from deepswarm.backends import Dataset, TFKerasBackend
@@ -25,9 +25,7 @@ trained_topology = deepswarm.train_topology(topology, 50)
 
 ```
 
-## Installation 
-
-### Using pip
+## Installation 💾
 
 1. Install the package
 
@@ -39,38 +37,8 @@ trained_topology = deepswarm.train_topology(topology, 50)
    ```sh
    pip install tensorflow-gpu==1.13.1
    ```
-
-### Using GitHub
-
-1. Clone the repository from the GitHub
-
-   ```sh
-   git clone https://github.com/Pattio/DeepSwarm.git
-   ```
-2. Change the current directory to the repository directory
-
-   ```sh
-   cd deepswarm
-   ```
-3. Create and activate virtual environment (optional)
-
-   ```sh
-   python3 -m venv deepswarm-env && source deepswarm-env/bin/activate
-   ```
-4. Install the external dependencies 
-
-   ```sh
-   pip install -r requirements.txt
-   ```
-5. Install one of the implemented backends that you want to use
-
-   ```sh
-   pip install tensorflow-gpu==1.13.1
-   ```
    
-## Usage
-
-#### pip installation:
+## Usage 🕹
 
 1. Create a new file containing the example code
   
@@ -82,22 +50,7 @@ trained_topology = deepswarm.train_topology(topology, 50)
 3. Update the newly created YAML file to your dataset needs. The only two important changes you must make are: (1) change the loss function to reflect your task (2) change the shape of input and output nodes
 
 
-#### GitHub installation:
-
-1. Create a new file in the example directory (use example code as the base)
-
-   ```sh
-   touch examples/custom-dataset.py
-   ```
-2. Create a new YAML file which has the exact same name as the file you created in step 1. When creating this new YAML file, use `default.yaml` as its base 
-
-   ```sh
-   cp settings/default.yaml settings/custom-dataset.yaml
-   ```
-3. Update the newly created YAML file to your dataset needs. The only two important changes you must make are: (1) change the loss function to reflect your task (2) change the shape of input and output nodes.
-
-
-## Search 
+## Search 🔎
 
 <p align="center">
   <img src="https://user-images.githubusercontent.com/9087174/56983672-21481680-6b7c-11e9-91b7-e41882ec81ee.png">
@@ -107,8 +60,7 @@ trained_topology = deepswarm.train_topology(topology, 50)
 
 <strong>Note</strong>: Arrow thickness indicates the pheromone amount, meaning that thicker arrows have more pheromone.
 
-
-## Configuration 
+## Configuration 🛠
 
 | Node type      | Attributes  |
 | :------------- |:-------------|
@@ -138,9 +90,16 @@ trained_topology = deepswarm.train_topology(topology, 50)
 | loss | Specifies what loss function should be used during the training. Currently available options are sparse_categorical_crossentropy and categorical_crossentropy. |
 | spatial_nodes | Specifies which nodes are placed before the flattening node. Values in this array must correspond to node names. |
 | flat_nodes | Specifies which nodes are placed after the flattening node (array should also include the flattening node). Values in this array must correspond to node names. |
-| verbose|  Specifies if associated component should log the output.|
+| verbose|  Specifies if the associated component should log the output.|
 
+## Future goals 🌟
 
-## Acknowledgments
+- [ ] Add a node which can combine the input from the two previous nodes.
+- [ ] Add a node which can skip the depth n in order to connect to the node in depth n+1.
+- [ ] Delete the models which are not referenced anymore.
+- [ ] Add an option to assemble the best n models into one model.
+- [ ] Add functionality to reuse the weights from the non-continues blocks, i.e. take the best weights for depth n-1 from one model and then take the best weights for depth n+1 from another model.
+
+## Acknowledgments 🎓
 
 DeepSwarm was developed under the supervision of [Dr Wei Pang](https://www.abdn.ac.uk/ncs/people/profiles/pang.wei) in partial fulfilment of the requirements for the degree of Bachelor of Science of the [University of Aberdeen](https://www.abdn.ac.uk).
