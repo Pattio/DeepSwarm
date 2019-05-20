@@ -100,6 +100,18 @@ trained_topology = deepswarm.train_topology(topology, 50)
 - [ ] Add an option to assemble the best n models into one model.
 - [ ] Add functionality to reuse the weights from the non-continues blocks, i.e. take the best weights for depth n-1 from one model and then take the best weights for depth n+1 from another model.
 
+## Citation 🖋
+
+Online version is available at: [arXiv:1905.07350](https://arxiv.org/abs/1905.07350)
+```bibtex
+@article{byla2019deepswarm,
+  title   =  {DeepSwarm: Optimising Convolutional Neural Networks using Swarm Intelligence},
+  author  =  {Edvinas Byla and Wei Pang},
+  journal =  {arXiv preprint arXiv:1905.07350},
+  year    =  {2019}
+}
+```
+
 ## Acknowledgments 🎓
 
 DeepSwarm was developed under the supervision of [Dr Wei Pang](https://www.abdn.ac.uk/ncs/people/profiles/pang.wei) in partial fulfilment of the requirements for the degree of Bachelor of Science of the [University of Aberdeen](https://www.abdn.ac.uk).
