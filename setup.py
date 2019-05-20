@@ -20,7 +20,7 @@ setuptools.setup(
         'scikit-learn==0.20.3',
     ],
     classifiers=[
-        "Programming Language :: Python :: 3",
+        'Programming Language :: Python :: 3.6',
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
