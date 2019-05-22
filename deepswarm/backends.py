@@ -122,6 +122,12 @@ class TFKerasBackend(BaseBackend):
     """Backend based on TensorFlow Keras API"""
 
     def __init__(self, dataset, optimizer=None):
+        # If the user passes custom optimizer we serialize it, as reusing the
+        # same optimizer instance causes crash in TensorFlow  1.13.1, see issue
+        # https://github.com/Pattio/DeepSwarm/issues/3
+        if optimizer is not None:
+            optimizer = tf.keras.optimizers.serialize(optimizer)
+
         super().__init__(dataset, optimizer)
         self.data_format = K.image_data_format()
 
@@ -161,8 +167,9 @@ class TFKerasBackend(BaseBackend):
         }
 
         # If user specified custom optimizer, use it instead of the default one
+        # we also need to deserialize optimizer as it was serialized during init
         if self.optimizer is not None:
-            optimizer_parameters['optimizer'] = self.optimizer
+            optimizer_parameters['optimizer'] = tf.keras.optimizers.deserialize(self.optimizer)
         model.compile(**optimizer_parameters)
 
     def create_layer(self, node):
