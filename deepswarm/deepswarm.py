@@ -17,9 +17,11 @@ class DeepSwarm:
         # Enable logging and log current settings
         self.setup_logging()
 
-        # Try to load from the backup
+        # Try to load from the backup and restore backend as it was not saved
         if self.storage.loaded_from_save:
             self.__dict__ = self.storage.backup.__dict__
+            self.backend = backend
+            self.aco.backend = backend
 
     def setup_logging(self):
         """Enables logging and logs current settings."""
@@ -88,3 +90,8 @@ class DeepSwarm:
         Log.header('EVALUATING PERFORMANCE ON TEST SET')
         loss, accuracy = self.backend.evaluate_model(model)
         Log.info('Accuracy is %f and loss is %f' % (accuracy, loss))
+
+    def __getstate__(self):
+        d = dict(self.__dict__)
+        del d['backend']
+        return d

@@ -209,6 +209,11 @@ class ACO:
         evaporation = cfg['aco']['pheromone']['evaporation']
         return (1 - evaporation) * old_value + (evaporation * added_pheromone)
 
+    def __getstate__(self):
+        d = dict(self.__dict__)
+        del d['backend']
+        return d
+
 
 class Ant:
     """Class responsible for representing the ant."""
