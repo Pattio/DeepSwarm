@@ -274,7 +274,8 @@ class TFKerasBackend(BaseBackend):
         # Load model from checkpoint
         checkpoint_model = self.load_model(checkpoint_path)
         # Delete checkpoint
-        os.remove(checkpoint_path)
+        if os.path.isfile(checkpoint_path):
+            os.remove(checkpoint_path)
         # Return checkpoint model if it exists, otherwise return trained model
         return checkpoint_model if checkpoint_model is not None else model
 
@@ -310,7 +311,8 @@ class TFKerasBackend(BaseBackend):
         # Load model from checkpoint
         checkpoint_model = self.load_model(checkpoint_path)
         # Delete checkpoint
-        os.remove(checkpoint_path)
+        if os.path.isfile(checkpoint_path):
+            os.remove(checkpoint_path)
         # Return checkpoint model if it exists, otherwise return trained model
         return checkpoint_model if checkpoint_model is not None else model
 
